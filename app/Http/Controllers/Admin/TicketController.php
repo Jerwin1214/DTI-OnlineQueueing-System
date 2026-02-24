@@ -15,16 +15,16 @@ class TicketController extends Controller
      * Display Tickets
      * ====================
      */
- public function index()
-{
-    $tickets = DB::table('queues')
-        ->orderByRaw('CAST(ticket_number AS UNSIGNED) ASC')
-        ->orderBy('counter_id', 'asc')
-        ->get();
+    public function index()
+    {
+        $tickets = DB::table('queues')
+            // PostgreSQL-compatible sorting
+            ->orderBy('ticket_number', 'asc')
+            ->orderBy('counter_id', 'asc')
+            ->get();
 
-    return view('admin.ticket-management', compact('tickets'));
-}
-
+        return view('admin.ticket-management', compact('tickets'));
+    }
 
     /**
      * ====================
@@ -42,20 +42,28 @@ class TicketController extends Controller
         DB::beginTransaction();
 
         try {
-            // Get the last numeric ticket number
-            $lastNumber = DB::table('queues')->max('ticket_number') ?? 0;
+
+            // Get last ticket number safely (PostgreSQL compatible)
+            $lastNumber = DB::table('queues')
+                ->select(DB::raw('MAX(ticket_number) as max_number'))
+                ->value('max_number');
+
+            $lastNumber = $lastNumber ?? 0;
 
             for ($i = 1; $i <= $request->ticket_count; $i++) {
+
                 $lastNumber++;
 
                 foreach ($request->counters as $counter) {
+
                     DB::table('queues')->insert([
-                        'ticket_number' => $lastNumber, // numeric, formatted in Blade
+                        'ticket_number' => $lastNumber,
                         'counter_id'    => $counter,
                         'status'        => 'waiting',
                         'created_at'    => now(),
                         'updated_at'    => now()
                     ]);
+
                 }
             }
 
@@ -78,7 +86,9 @@ class TicketController extends Controller
      */
     public function delete($id)
     {
-        DB::table('queues')->where('id', $id)->delete();
+        DB::table('queues')
+            ->where('id', $id)
+            ->delete();
 
         return back()->with('success', 'Ticket deleted successfully.');
     }
