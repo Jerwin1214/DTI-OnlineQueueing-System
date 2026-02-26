@@ -112,9 +112,17 @@ html, body {
     <!-- VIDEO -->
     <div id="videoPanel">
 
-        <!-- ✅ CORRECT RENDER STORAGE PATH -->
-        <video id="videoPlayer" autoplay loop unmuted playsinline>
-            <source src="{{ asset('storage/VIDEOFORQUEUING.mp4') }}" type="video/mp4">
+        <!-- ✅ FIXED VIDEO FOR RENDER -->
+        <video id="videoPlayer"
+               autoplay
+               loop
+               muted
+               playsinline
+               preload="auto">
+
+            <source src="{{ asset('storage/VIDEOFORQUEUING.mp4') }}"
+                    type="video/mp4">
+
             Your browser does not support the video tag.
         </video>
 
@@ -123,7 +131,6 @@ html, body {
         <!-- DATE / TIME / LOGOS -->
         <div id="dateTimePanel">
 
-            <!-- ✅ LOGOS MUST ALSO BE INSIDE storage/app/public -->
             <img src="{{ asset('storage/logoDTI.png') }}"
                  class="h-24 object-contain"
                  alt="Logo Left">
@@ -155,7 +162,8 @@ html, body {
 
 <!-- AUDIO -->
 <audio id="nextSound" preload="auto">
-    <source src="{{ asset('storage/doorbell-223669.mp3') }}" type="audio/mpeg">
+    <source src="{{ asset('storage/doorbell-223669.mp3') }}"
+            type="audio/mpeg">
 </audio>
 
 @endsection
@@ -196,15 +204,6 @@ document.getElementById('btnFullscreen').addEventListener('click', () => {
 });
 
 
-// AUDIO
-const nextSound = document.getElementById('nextSound');
-
-function playNextSound() {
-    nextSound.currentTime = 0;
-    nextSound.play().catch(() => {});
-}
-
-
 // FETCH COUNTERS
 function fetchCounters() {
     fetch("{{ route('admin.getCounters') }}", {
@@ -216,10 +215,11 @@ function fetchCounters() {
         @foreach($selectedCounters as $i)
         const el{{ $i }} = document.getElementById('txtServingNumber{{ $i }}');
 
-        if (el{{ $i }}) {
+        if (el{{ $i }} && data[{{ $i }}]) {
+
             let newTicket = 'C000';
 
-            if (data[{{ $i }}] && data[{{ $i }}].ticket !== null) {
+            if (data[{{ $i }}].ticket !== null) {
                 const ticketNum = parseInt(data[{{ $i }}].ticket);
                 if (!isNaN(ticketNum)) {
                     newTicket = 'C' + ticketNum.toString().padStart(3,'0');
@@ -231,7 +231,7 @@ function fetchCounters() {
         @endforeach
 
     })
-    .catch(err => console.error(err));
+    .catch(err => console.error("Counter fetch error:", err));
 }
 
 setInterval(fetchCounters, 2000);
