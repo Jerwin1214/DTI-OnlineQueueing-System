@@ -1,6 +1,6 @@
-FROM php:8.3-apache
+FROM php:8.4-apache
 
-# Install dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -19,14 +19,14 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy project
+# Copy project files
 COPY . .
 
-# Set Apache DocumentRoot to Laravel public folder
+# Set Apache document root to Laravel public folder
 RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Install Laravel dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
 # Fix permissions
 RUN chown -R www-data:www-data storage bootstrap/cache
