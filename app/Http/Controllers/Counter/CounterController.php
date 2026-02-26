@@ -36,8 +36,7 @@ class CounterController extends Controller
      */
     public function serveNextTicket()
     {
-        $user = Auth::user();
-        $counterId = $user->counter_id;
+        $counterId = Auth::user()->counter_id;
 
         if (!$counterId) {
             return response()->json(['message' => 'No counter assigned.'], 400);
@@ -64,7 +63,7 @@ class CounterController extends Controller
             return response()->json(['message' => 'No waiting tickets.'], 400);
         }
 
-        // Update to serving
+        // Update ticket to serving
         DB::table('queues')
             ->where('id', $nextTicket->id)
             ->update([
@@ -82,8 +81,7 @@ class CounterController extends Controller
      */
     public function completeCurrentTicket()
     {
-        $user = Auth::user();
-        $counterId = $user->counter_id;
+        $counterId = Auth::user()->counter_id;
 
         if (!$counterId) {
             return response()->json(['message' => 'No counter assigned.'], 400);
@@ -101,7 +99,7 @@ class CounterController extends Controller
         DB::table('queues')
             ->where('id', $currentTicket->id)
             ->update([
-                'status' => 'done', // 🔥 FIXED (was "completed")
+                'status' => 'done',
                 'updated_at' => now()
             ]);
 
@@ -115,18 +113,17 @@ class CounterController extends Controller
      */
     public function getStatus()
     {
-        $user = Auth::user();
-        $counterId = $user->counter_id;
+        $counterId = Auth::user()->counter_id;
 
         if (!$counterId) {
             return response()->json([
-                'serving' => null,
-                'waiting' => 0,
+                'serving'   => null,
+                'waiting'   => 0,
                 'last_done' => null
             ]);
         }
 
-        // Currently serving ticket
+        // Currently serving
         $serving = DB::table('queues')
             ->where('counter_id', $counterId)
             ->where('status', 'serving')
@@ -141,14 +138,15 @@ class CounterController extends Controller
         // Last done ticket
         $lastDone = DB::table('queues')
             ->where('counter_id', $counterId)
-            ->where('status', 'done') // 🔥 FIXED
+            ->where('status', 'done')
             ->orderByDesc('updated_at')
             ->value('ticket_number');
 
+        // 🔥 FORMAT TICKET NUMBERS HERE (C001)
         return response()->json([
-            'serving'   => $serving,
+            'serving'   => $serving ? 'C' . str_pad($serving, 3, '0', STR_PAD_LEFT) : null,
             'waiting'   => $waiting,
-            'last_done' => $lastDone
+            'last_done' => $lastDone ? 'C' . str_pad($lastDone, 3, '0', STR_PAD_LEFT) : null
         ]);
     }
 
