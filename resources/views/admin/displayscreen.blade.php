@@ -112,7 +112,7 @@ html, body {
     <!-- VIDEO -->
     <div id="videoPanel">
 
-        <!-- ✅ CORRECT PATH -->
+        <!-- ✅ CORRECT RENDER STORAGE PATH -->
         <video id="videoPlayer" autoplay loop unmuted playsinline>
             <source src="{{ asset('storage/VIDEOFORQUEUING.mp4') }}" type="video/mp4">
             Your browser does not support the video tag.
@@ -123,7 +123,7 @@ html, body {
         <!-- DATE / TIME / LOGOS -->
         <div id="dateTimePanel">
 
-            <!-- ✅ CORRECT PATH -->
+            <!-- ✅ LOGOS MUST ALSO BE INSIDE storage/app/public -->
             <img src="{{ asset('storage/logoDTI.png') }}"
                  class="h-24 object-contain"
                  alt="Logo Left">
@@ -133,7 +133,6 @@ html, body {
                 <div id="txtDate" class="text-2xl mt-1"></div>
             </div>
 
-            <!-- ✅ CORRECT PATH -->
             <img src="{{ asset('storage/bagongpilipinas2.png') }}"
                  class="h-24 object-contain"
                  alt="Logo Right">
@@ -237,25 +236,6 @@ function fetchCounters() {
 
 setInterval(fetchCounters, 2000);
 fetchCounters();
-
-
-// SERVE NEXT
-function nextTicket() {
-    axios.post("{{ route('counter.serveTicket') }}")
-        .then(() => {
-            fetchCounters();
-            playNextSound();
-        })
-        .catch(() => alert('No waiting tickets.'));
-}
-
-
-// COMPLETE
-function completeTicket() {
-    axios.post("{{ route('counter.completeTicket') }}")
-        .then(() => fetchCounters())
-        .catch(() => alert('No serving ticket.'));
-}
 
 </script>
 @endsection
