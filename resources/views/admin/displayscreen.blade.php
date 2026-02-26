@@ -108,6 +108,8 @@ html, body {
     color: white;
     cursor: pointer;
     z-index: 50;
+    background: transparent;
+    border: none;
 }
 </style>
 
@@ -115,18 +117,20 @@ html, body {
 
     <!-- VIDEO + DATE/TIME -->
     <div id="videoPanel">
-        <video id="videoPlayer" autoplay loop muted>
+        <video id="videoPlayer" autoplay loop muted playsinline>
             <source src="{{ asset('storage/videos/VIDEOFORQUEUING.mp4') }}" type="video/mp4">
+            Your browser does not support the video tag.
         </video>
+
         <button id="btnFullscreen">⛶</button>
 
         <div id="dateTimePanel">
-            <img src="{{ asset('storage/images/logoDTI.png') }}" class="h-24 object-contain">
+            <img src="{{ asset('storage/images/logoDTI.png') }}" class="h-24 object-contain" alt="Logo Left">
             <div class="text-center">
                 <div id="txtClock" class="text-5xl font-bold"></div>
                 <div id="txtDate" class="text-2xl mt-1"></div>
             </div>
-            <img src="{{ asset('storage/images/bagongpilipinas2.png') }}" class="h-24 object-contain">
+            <img src="{{ asset('storage/images/bagongpilipinas2.png') }}" class="h-24 object-contain" alt="Logo Right">
         </div>
     </div>
 
@@ -145,15 +149,17 @@ html, body {
     </div>
 </div>
 
-<!-- AUDIO FOR NEXT TICKET -->
+<!-- AUDIO -->
 <audio id="nextSound" preload="auto">
     <source src="{{ asset('storage/audios/doorbell-223669.mp3') }}" type="audio/mpeg">
 </audio>
+
 @endsection
 
 @section('scripts')
 <script>
-// CLOCK
+
+// ---------------- CLOCK ----------------
 function updateClock() {
     const now = new Date();
     const hours = now.getHours() % 12 || 12;
@@ -175,7 +181,8 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-// FULLSCREEN
+
+// ---------------- FULLSCREEN ----------------
 document.getElementById('btnFullscreen').addEventListener('click', () => {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen();
@@ -184,58 +191,72 @@ document.getElementById('btnFullscreen').addEventListener('click', () => {
     }
 });
 
-// 🔊 NEXT SOUND
+
+// ---------------- AUDIO ----------------
 const nextSound = document.getElementById('nextSound');
-nextSound.load(); // preload sound
 
 function playNextSound() {
     nextSound.currentTime = 0;
-    nextSound.play().catch(e => console.log("Audio blocked:", e));
+    nextSound.play().catch(err => {
+        console.warn("Autoplay blocked:", err);
+    });
 }
 
-// FETCH COUNTERS AND DISPLAY IN NUMERIC ORDER
+
+// ---------------- FETCH COUNTERS ----------------
 function fetchCounters() {
-    fetch("{{ route('admin.getCounters') }}")
-        .then(res => res.json())
-        .then(data => {
-            @foreach($selectedCounters as $i)
-            const el{{ $i }} = document.getElementById('txtServingNumber{{ $i }}');
-            if (el{{ $i }}) {
-                let newTicket = 'C000'; // default if no ticket
-                if (data[{{ $i }}] && data[{{ $i }}].ticket != null) {
-                    const ticketNum = parseInt(data[{{ $i }}].ticket, 10);
-                    if (!isNaN(ticketNum)) {
-                        newTicket = 'C' + ticketNum.toString().padStart(3,'0');
-                    }
+    fetch("{{ route('admin.getCounters') }}", {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error("Network error");
+        return response.json();
+    })
+    .then(data => {
+        @foreach($selectedCounters as $i)
+        const el{{ $i }} = document.getElementById('txtServingNumber{{ $i }}');
+        if (el{{ $i }}) {
+            let newTicket = 'C000';
+
+            if (data[{{ $i }}] && data[{{ $i }}].ticket !== null) {
+                const ticketNum = parseInt(data[{{ $i }}].ticket);
+                if (!isNaN(ticketNum)) {
+                    newTicket = 'C' + ticketNum.toString().padStart(3,'0');
                 }
-                el{{ $i }}.textContent = newTicket;
             }
-            @endforeach
-        })
-        .catch(err => console.error('Error fetching counters:', err));
+
+            el{{ $i }}.textContent = newTicket;
+        }
+        @endforeach
+    })
+    .catch(error => console.error("Fetch error:", error));
 }
+
 setInterval(fetchCounters, 2000);
 fetchCounters();
 
-// SERVE NEXT TICKET
+
+// ---------------- SERVE NEXT ----------------
 function nextTicket() {
     axios.post("{{ route('counter.serveTicket') }}")
         .then(() => {
-            fetchCounters();      // update display immediately
-            playNextSound();      // 🔊 play only on NEXT click
+            fetchCounters();
+            playNextSound();
         })
         .catch(error => {
-            alert(error.response?.data?.message ?? 'No waiting tickets or already serving.');
+            alert(error.response?.data?.message ?? 'No waiting tickets.');
         });
 }
 
-// COMPLETE CURRENT TICKET
+
+// ---------------- COMPLETE ----------------
 function completeTicket() {
     axios.post("{{ route('counter.completeTicket') }}")
         .then(() => fetchCounters())
         .catch(error => {
-            alert(error.response?.data?.message ?? 'No ticket currently serving.');
+            alert(error.response?.data?.message ?? 'No serving ticket.');
         });
 }
+
 </script>
 @endsection
