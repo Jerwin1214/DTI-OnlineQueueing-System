@@ -64,12 +64,6 @@ html, body {
     width: 100%;
 }
 
-#nowServingWrapper {
-    width: 100%;
-    display: flex;
-    justify-content: flex-end;
-}
-
 #txtTopNowServing {
     font-size: 2.5rem;
     color: white;
@@ -115,30 +109,41 @@ html, body {
 
 <div id="displayScreenContainer">
 
-    <!-- VIDEO + DATE/TIME -->
+    <!-- VIDEO -->
     <div id="videoPanel">
+
+        <!-- ✅ CORRECT PATH -->
         <video id="videoPlayer" autoplay loop muted playsinline>
-            <source src="{{ asset('storage/videos/VIDEOFORQUEUING.mp4') }}" type="video/mp4">
+            <source src="{{ asset('storage/VIDEOFORQUEUING.mp4') }}" type="video/mp4">
             Your browser does not support the video tag.
         </video>
 
         <button id="btnFullscreen">⛶</button>
 
+        <!-- DATE / TIME / LOGOS -->
         <div id="dateTimePanel">
-            <img src="{{ asset('storage/images/logoDTI.png') }}" class="h-24 object-contain" alt="Logo Left">
+
+            <!-- ✅ CORRECT PATH -->
+            <img src="{{ asset('storage/logoDTI.png') }}"
+                 class="h-24 object-contain"
+                 alt="Logo Left">
+
             <div class="text-center">
                 <div id="txtClock" class="text-5xl font-bold"></div>
                 <div id="txtDate" class="text-2xl mt-1"></div>
             </div>
-            <img src="{{ asset('storage/images/bagongpilipinas2.png') }}" class="h-24 object-contain" alt="Logo Right">
+
+            <!-- ✅ CORRECT PATH -->
+            <img src="{{ asset('storage/bagongpilipinas2.png') }}"
+                 class="h-24 object-contain"
+                 alt="Logo Right">
+
         </div>
     </div>
 
     <!-- COUNTERS -->
     <div id="countersPanel">
-        <div id="nowServingWrapper">
-            <h1 id="txtTopNowServing">NOW SERVING</h1>
-        </div>
+        <h1 id="txtTopNowServing">NOW SERVING</h1>
 
         @foreach($selectedCounters as $i)
         <div class="counterBox">
@@ -151,7 +156,7 @@ html, body {
 
 <!-- AUDIO -->
 <audio id="nextSound" preload="auto">
-    <source src="{{ asset('storage/audios/doorbell-223669.mp3') }}" type="audio/mpeg">
+    <source src="{{ asset('storage/doorbell-223669.mp3') }}" type="audio/mpeg">
 </audio>
 
 @endsection
@@ -159,7 +164,7 @@ html, body {
 @section('scripts')
 <script>
 
-// ---------------- CLOCK ----------------
+// CLOCK
 function updateClock() {
     const now = new Date();
     const hours = now.getHours() % 12 || 12;
@@ -182,7 +187,7 @@ setInterval(updateClock, 1000);
 updateClock();
 
 
-// ---------------- FULLSCREEN ----------------
+// FULLSCREEN
 document.getElementById('btnFullscreen').addEventListener('click', () => {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen();
@@ -192,29 +197,26 @@ document.getElementById('btnFullscreen').addEventListener('click', () => {
 });
 
 
-// ---------------- AUDIO ----------------
+// AUDIO
 const nextSound = document.getElementById('nextSound');
 
 function playNextSound() {
     nextSound.currentTime = 0;
-    nextSound.play().catch(err => {
-        console.warn("Autoplay blocked:", err);
-    });
+    nextSound.play().catch(() => {});
 }
 
 
-// ---------------- FETCH COUNTERS ----------------
+// FETCH COUNTERS
 function fetchCounters() {
     fetch("{{ route('admin.getCounters') }}", {
         headers: { "X-Requested-With": "XMLHttpRequest" }
     })
-    .then(response => {
-        if (!response.ok) throw new Error("Network error");
-        return response.json();
-    })
+    .then(res => res.json())
     .then(data => {
+
         @foreach($selectedCounters as $i)
         const el{{ $i }} = document.getElementById('txtServingNumber{{ $i }}');
+
         if (el{{ $i }}) {
             let newTicket = 'C000';
 
@@ -228,34 +230,31 @@ function fetchCounters() {
             el{{ $i }}.textContent = newTicket;
         }
         @endforeach
+
     })
-    .catch(error => console.error("Fetch error:", error));
+    .catch(err => console.error(err));
 }
 
 setInterval(fetchCounters, 2000);
 fetchCounters();
 
 
-// ---------------- SERVE NEXT ----------------
+// SERVE NEXT
 function nextTicket() {
     axios.post("{{ route('counter.serveTicket') }}")
         .then(() => {
             fetchCounters();
             playNextSound();
         })
-        .catch(error => {
-            alert(error.response?.data?.message ?? 'No waiting tickets.');
-        });
+        .catch(() => alert('No waiting tickets.'));
 }
 
 
-// ---------------- COMPLETE ----------------
+// COMPLETE
 function completeTicket() {
     axios.post("{{ route('counter.completeTicket') }}")
         .then(() => fetchCounters())
-        .catch(error => {
-            alert(error.response?.data?.message ?? 'No serving ticket.');
-        });
+        .catch(() => alert('No serving ticket.'));
 }
 
 </script>
