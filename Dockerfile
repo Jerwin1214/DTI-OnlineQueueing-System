@@ -28,6 +28,13 @@ RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available
 # Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
+# 🔥 VERY IMPORTANT (THIS FIXES YOUR ISSUE)
+RUN php artisan storage:link
+
+# Clear caches for production
+RUN php artisan config:clear
+RUN php artisan cache:clear
+
 # Fix permissions
 RUN chown -R www-data:www-data storage bootstrap/cache
 RUN chmod -R 775 storage bootstrap/cache
