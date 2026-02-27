@@ -161,6 +161,11 @@ class AdminController extends Controller
         return response()->json($counters);
     }
 
+    /**
+     * =========================
+     * COUNTER ONLINE STATUS
+     * =========================
+     */
     public function getCounterStatus()
     {
         $counters = [];
@@ -171,14 +176,18 @@ class AdminController extends Controller
 
             if ($user) {
 
-                $isOnline = DB::table('sessions')
-                    ->where('user_id', $user->id)
-                    ->where('last_activity', '>=', now()->subMinutes(5)->timestamp)
-                    ->exists();
+                $counter = DB::table('counters')
+                    ->where('id', $i)
+                    ->first();
 
                 $counters[$i] = [
                     'user'   => $user->full_name ?? $user->user_id,
-                    'status' => $isOnline ? 'online' : 'offline'
+                    'status' => ($counter && $counter->is_online) ? 'online' : 'offline'
+                ];
+            } else {
+                $counters[$i] = [
+                    'user'   => 'Unassigned',
+                    'status' => 'offline'
                 ];
             }
         }
@@ -191,7 +200,6 @@ class AdminController extends Controller
      * TICKET MANAGEMENT
      * =========================
      */
-
     public function ticketManagement()
     {
         $tickets = Queue::orderBy('ticket_number', 'asc')->get();
@@ -201,7 +209,6 @@ class AdminController extends Controller
     public function deleteTicket($id)
     {
         Queue::findOrFail($id)->delete();
-
         return redirect()->back()->with('success', 'Ticket deleted successfully.');
     }
 
