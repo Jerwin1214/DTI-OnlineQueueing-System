@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Queue;
-use App\Models\Ticket;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +13,9 @@ use Illuminate\Support\Facades\DB;
 class AdminController extends Controller
 {
     /**
-     * Admin Dashboard (MAIN PANEL)
+     * =========================
+     * ADMIN DASHBOARD
+     * =========================
      */
     public function index()
     {
@@ -26,27 +27,17 @@ class AdminController extends Controller
      * USER MANAGEMENT
      * =========================
      */
-
-    /**
-     * List all users
-     */
     public function users()
     {
         $users = User::latest()->get();
         return view('admin.users', compact('users'));
     }
 
-    /**
-     * Show form to create a new user
-     */
     public function createUserForm()
     {
         return view('admin.create-user');
     }
 
-    /**
-     * Store newly created user
-     */
     public function storeUser(Request $request)
     {
         $request->validate([
@@ -60,8 +51,6 @@ class AdminController extends Controller
             'full_name'  => 'required|string|max:255',
             'role'       => 'required|in:admin,counter',
             'counter_id' => 'nullable|integer',
-        ], [
-            'password.regex' => 'Password must contain uppercase, lowercase, number, and special character.',
         ]);
 
         User::create([
@@ -76,18 +65,12 @@ class AdminController extends Controller
             ->with('success', 'User created successfully.');
     }
 
-    /**
-     * Show form to edit existing user
-     */
     public function editUser($id)
     {
         $user = User::findOrFail($id);
         return view('admin.edit-user', compact('user'));
     }
 
-    /**
-     * Update existing user
-     */
     public function updateUser(Request $request, $id)
     {
         $user = User::findOrFail($id);
@@ -103,8 +86,6 @@ class AdminController extends Controller
             'full_name'  => 'required|string|max:255',
             'role'       => 'required|in:admin,counter',
             'counter_id' => 'nullable|integer',
-        ], [
-            'password.regex' => 'Password must contain uppercase, lowercase, number, and special character.',
         ]);
 
         $user->user_id    = $request->user_id;
@@ -122,13 +103,9 @@ class AdminController extends Controller
             ->with('success', 'User updated successfully.');
     }
 
-    /**
-     * Delete a user
-     */
     public function deleteUser($id)
     {
-        $user = User::findOrFail($id);
-        $user->delete();
+        User::findOrFail($id)->delete();
 
         return redirect()->route('admin.users')
             ->with('success', 'User deleted successfully.');
@@ -136,21 +113,23 @@ class AdminController extends Controller
 
     /**
      * =========================
-     * DISPLAY SCREEN (TV VIEW)
+     * DISPLAY SCREEN (TV)
      * =========================
      */
     public function displayScreen(Request $request)
     {
-        $selectedCounters = $request->input('counters', [1, 2, 3, 4, 5]);
+        $selectedCounters = $request->input('counters', [1,2,3,4,5]);
         $counters = [];
 
         foreach ($selectedCounters as $i) {
+
             $ticket = Queue::where('status', 'serving')
                 ->where('counter_id', $i)
                 ->latest('id')
                 ->first();
 
             $user = User::where('counter_id', $i)->first();
+
             $counters[$i] = [
                 'ticket' => $ticket?->ticket_number ?? '-',
                 'user'   => $user?->full_name ?? 'Unassigned'
@@ -160,14 +139,12 @@ class AdminController extends Controller
         return view('admin.displayscreen', compact('counters'));
     }
 
-    /**
-     * AJAX polling endpoint for tickets
-     */
     public function getCounters()
     {
         $counters = [];
 
         for ($i = 1; $i <= 5; $i++) {
+
             $ticket = Queue::where('status', 'serving')
                 ->where('counter_id', $i)
                 ->latest('id')
@@ -184,25 +161,23 @@ class AdminController extends Controller
         return response()->json($counters);
     }
 
-    /**
-     * AJAX endpoint for online/offline counter status
-     */
     public function getCounterStatus()
     {
         $counters = [];
 
         for ($i = 1; $i <= 5; $i++) {
+
             $user = User::where('counter_id', $i)->first();
 
             if ($user) {
-                // Check if user has an active session in last 5 min
+
                 $isOnline = DB::table('sessions')
                     ->where('user_id', $user->id)
                     ->where('last_activity', '>=', now()->subMinutes(5)->timestamp)
                     ->exists();
 
                 $counters[$i] = [
-                    'user' => $user->full_name ?? $user->user_id,
+                    'user'   => $user->full_name ?? $user->user_id,
                     'status' => $isOnline ? 'online' : 'offline'
                 ];
             }
@@ -216,15 +191,17 @@ class AdminController extends Controller
      * TICKET MANAGEMENT
      * =========================
      */
+
     public function ticketManagement()
     {
-        $tickets = Ticket::latest()->get();
+        $tickets = Queue::orderBy('ticket_number', 'asc')->get();
         return view('admin.ticket-management', compact('tickets'));
     }
 
     public function deleteTicket($id)
     {
-        Ticket::findOrFail($id)->delete();
+        Queue::findOrFail($id)->delete();
+
         return redirect()->back()->with('success', 'Ticket deleted successfully.');
     }
 
