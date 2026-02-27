@@ -41,6 +41,11 @@ class Kernel extends HttpKernel
     protected $middlewareAliases = [
         'auth'  => \App\Http\Middleware\Authenticate::class,
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+
+        // 🔥 ROLE MIDDLEWARE (ADD THIS)
+        'role'  => \App\Http\Middleware\RoleMiddleware::class,
+
+        // Keep your existing admin if you still use it
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
     ];
 }
