@@ -52,22 +52,23 @@ class CounterController extends Controller
             return response()->json(['message' => 'Already serving a ticket.'], 400);
         }
 
-        // Get next waiting ticket for this counter
+        // ✅ GET OLDEST UNASSIGNED WAITING TICKET
         $nextTicket = DB::table('queues')
-            ->where('counter_id', $counterId)
             ->where('status', 'waiting')
-            ->orderBy('ticket_number', 'asc')
+            ->whereNull('counter_id')
+            ->orderBy('id', 'asc')
             ->first();
 
         if (!$nextTicket) {
             return response()->json(['message' => 'No waiting tickets.'], 400);
         }
 
-        // Update ticket to serving
+        // ✅ ASSIGN TICKET TO THIS COUNTER
         DB::table('queues')
             ->where('id', $nextTicket->id)
             ->update([
                 'status' => 'serving',
+                'counter_id' => $counterId,
                 'updated_at' => now()
             ]);
 
@@ -129,10 +130,10 @@ class CounterController extends Controller
             ->where('status', 'serving')
             ->value('ticket_number');
 
-        // Waiting count
+        // ✅ COUNT ALL UNASSIGNED WAITING TICKETS
         $waiting = DB::table('queues')
-            ->where('counter_id', $counterId)
             ->where('status', 'waiting')
+            ->whereNull('counter_id')
             ->count();
 
         // Last done ticket
@@ -142,7 +143,6 @@ class CounterController extends Controller
             ->orderByDesc('updated_at')
             ->value('ticket_number');
 
-        // 🔥 FORMAT TICKET NUMBERS HERE (C001)
         return response()->json([
             'serving'   => $serving ? 'C' . str_pad($serving, 3, '0', STR_PAD_LEFT) : null,
             'waiting'   => $waiting,
