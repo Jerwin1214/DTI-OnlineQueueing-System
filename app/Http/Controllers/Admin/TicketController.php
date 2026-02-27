@@ -8,8 +8,6 @@ use Illuminate\Support\Facades\DB;
 
 class TicketController extends Controller
 {
-    private $totalCounters = 5;
-
     /**
      * ====================
      * Display Tickets
@@ -18,9 +16,7 @@ class TicketController extends Controller
     public function index()
     {
         $tickets = DB::table('queues')
-            // PostgreSQL-compatible sorting
             ->orderBy('ticket_number', 'asc')
-            ->orderBy('counter_id', 'asc')
             ->get();
 
         return view('admin.ticket-management', compact('tickets'));
@@ -35,36 +31,27 @@ class TicketController extends Controller
     {
         $request->validate([
             'ticket_count' => 'required|integer|min:1|max:100',
-            'counters'     => 'required|array|min:1',
-            'counters.*'   => 'integer|min:1|max:' . $this->totalCounters,
         ]);
 
         DB::beginTransaction();
 
         try {
 
-            // Get last ticket number safely (PostgreSQL compatible)
-            $lastNumber = DB::table('queues')
-                ->select(DB::raw('MAX(ticket_number) as max_number'))
-                ->value('max_number');
-
+            // Get last ticket number safely
+            $lastNumber = DB::table('queues')->max('ticket_number');
             $lastNumber = $lastNumber ?? 0;
 
             for ($i = 1; $i <= $request->ticket_count; $i++) {
 
                 $lastNumber++;
 
-                foreach ($request->counters as $counter) {
-
-                    DB::table('queues')->insert([
-                        'ticket_number' => $lastNumber,
-                        'counter_id'    => $counter,
-                        'status'        => 'waiting',
-                        'created_at'    => now(),
-                        'updated_at'    => now()
-                    ]);
-
-                }
+                DB::table('queues')->insert([
+                    'ticket_number' => $lastNumber,
+                    'counter_id'    => null, // MUST BE NULL
+                    'status'        => 'waiting',
+                    'created_at'    => now(),
+                    'updated_at'    => now()
+                ]);
             }
 
             DB::commit();
