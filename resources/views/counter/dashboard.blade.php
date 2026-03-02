@@ -152,18 +152,21 @@
 
 <script>
 
-    // 🔥 REQUIRED FOR LARAVEL SESSION ON RENDER
+    // 🔥 Important for Render HTTPS + Laravel Session
     axios.defaults.withCredentials = true;
 
-    // CSRF TOKEN
+    // CSRF Token
     axios.defaults.headers.common['X-CSRF-TOKEN'] =
         document.querySelector('meta[name="csrf-token"]').content;
 
+    // Always use RELATIVE URLs (prevents Mixed Content)
+    const STATUS_URL = "{{ route('counter.status') }}";
+    const NEXT_URL = "{{ route('counter.serveTicket') }}";
+    const DONE_URL = "{{ route('counter.completeTicket') }}";
+
     async function loadStats() {
         try {
-            const response = await axios.get("{{ route('counter.status') }}", {
-                withCredentials: true
-            });
+            const response = await axios.get(STATUS_URL);
 
             document.getElementById('serving').innerText =
                 response.data.serving ?? '---';
@@ -175,18 +178,14 @@
                 response.data.last_done ?? '---';
 
         } catch (error) {
-            console.log("Status error:", error.response);
+            console.log("Status error:", error);
         }
     }
 
     async function nextTicket() {
         try {
-            await axios.post("{{ route('counter.serveTicket') }}", {}, {
-                withCredentials: true
-            });
-
+            await axios.post(NEXT_URL);
             loadStats();
-
         } catch (error) {
             alert(error.response?.data?.message ?? 'No waiting tickets.');
         }
@@ -194,17 +193,14 @@
 
     async function completeTicket() {
         try {
-            await axios.post("{{ route('counter.completeTicket') }}", {}, {
-                withCredentials: true
-            });
-
+            await axios.post(DONE_URL);
             loadStats();
-
         } catch (error) {
             alert(error.response?.data?.message ?? 'No serving ticket.');
         }
     }
 
+    // Auto refresh every 3 seconds
     setInterval(loadStats, 3000);
     loadStats();
 
