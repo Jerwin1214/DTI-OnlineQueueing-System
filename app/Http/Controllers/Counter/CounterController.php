@@ -22,7 +22,7 @@ class CounterController extends Controller
             abort(403, 'No counter assigned.');
         }
 
-        // ✅ MARK USER (COUNTER) AS ONLINE
+        // Mark counter (user) as online
         DB::table('users')
             ->where('id', $user->id)
             ->update([
@@ -39,7 +39,7 @@ class CounterController extends Controller
 
     /**
      * =========================
-     * SERVE NEXT ASSIGNED TICKET (FIFO)
+     * SERVE NEXT TICKET (FIFO)
      * =========================
      */
     public function serveNextTicket()
@@ -53,7 +53,7 @@ class CounterController extends Controller
             ], 400);
         }
 
-        // Check if already serving
+        // Prevent serving multiple tickets
         $currentServing = DB::table('queues')
             ->where('counter_id', $counterId)
             ->where('status', 'serving')
@@ -66,7 +66,7 @@ class CounterController extends Controller
             ], 400);
         }
 
-        // Get oldest waiting ticket for this counter
+        // Get oldest waiting ticket assigned to this counter
         $nextTicket = DB::table('queues')
             ->where('counter_id', $counterId)
             ->where('status', 'waiting')
@@ -135,7 +135,7 @@ class CounterController extends Controller
 
     /**
      * =========================
-     * LIVE STATUS (AJAX)
+     * LIVE STATUS
      * =========================
      */
     public function getStatus()
@@ -157,13 +157,13 @@ class CounterController extends Controller
             ->where('status', 'serving')
             ->value('ticket_number');
 
-        // Count waiting
+        // Waiting tickets for this counter
         $waiting = DB::table('queues')
             ->where('counter_id', $counterId)
             ->where('status', 'waiting')
             ->count();
 
-        // Last completed
+        // Last done ticket
         $lastDone = DB::table('queues')
             ->where('counter_id', $counterId)
             ->where('status', 'done')
@@ -186,7 +186,6 @@ class CounterController extends Controller
     {
         $user = Auth::user();
 
-        // ✅ MARK USER (COUNTER) AS OFFLINE
         if ($user) {
             DB::table('users')
                 ->where('id', $user->id)
