@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Models\Queue;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
@@ -58,7 +57,7 @@ class AdminController extends Controller
             'password'   => Hash::make($request->password),
             'full_name'  => $request->full_name,
             'role'       => $request->role,
-            'counter_id' => $request->counter_id ?? null,
+            'counter_id' => $request->role === 'counter' ? $request->counter_id : null,
         ]);
 
         return redirect()->route('admin.users')
@@ -91,7 +90,7 @@ class AdminController extends Controller
         $user->user_id    = $request->user_id;
         $user->full_name  = $request->full_name;
         $user->role       = $request->role;
-        $user->counter_id = $request->counter_id ?? null;
+        $user->counter_id = $request->role === 'counter' ? $request->counter_id : null;
 
         if ($request->password) {
             $user->password = Hash::make($request->password);
@@ -113,7 +112,63 @@ class AdminController extends Controller
 
     /**
      * =========================
-     * MANUAL ASSIGN TICKETS TO COUNTER
+     * GENERATE TICKETS (AUTO ASSIGN COUNTER)
+     * =========================
+     */
+    public function addTicket(Request $request)
+    {
+        $request->validate([
+            'ticket_count' => 'required|integer|min:1',
+            'counters'     => 'required|array|min:1'
+        ]);
+
+        $ticketCount = $request->ticket_count;
+        $counters    = $request->counters;
+
+        $lastTicket = Queue::max('ticket_number') ?? 0;
+
+        $counterIndex = 0;
+        $counterTotal = count($counters);
+
+        for ($i = 1; $i <= $ticketCount; $i++) {
+
+            $lastTicket++;
+            $assignedCounter = $counters[$counterIndex];
+
+            Queue::create([
+                'ticket_number' => $lastTicket,
+                'counter_id'    => $assignedCounter,
+                'status'        => 'waiting',
+                'created_at'    => now(),
+                'updated_at'    => now(),
+            ]);
+
+            $counterIndex++;
+            if ($counterIndex >= $counterTotal) {
+                $counterIndex = 0;
+            }
+        }
+
+        return redirect()->back()
+            ->with('success', 'Tickets generated and assigned successfully.');
+    }
+
+    /**
+     * =========================
+     * CLEAR ALL TICKETS
+     * =========================
+     */
+    public function clearTickets()
+    {
+        Queue::truncate();
+
+        return redirect()->back()
+            ->with('success', 'All tickets cleared successfully.');
+    }
+
+    /**
+     * =========================
+     * MANUAL ASSIGN TICKETS
      * =========================
      */
     public function assignTicketsToCounter(Request $request)
@@ -136,7 +191,7 @@ class AdminController extends Controller
 
     /**
      * =========================
-     * DISPLAY SCREEN (TV)
+     * DISPLAY SCREEN (TV VIEW)
      * =========================
      */
     public function displayScreen(Request $request)
@@ -154,7 +209,7 @@ class AdminController extends Controller
             $user = User::where('counter_id', $i)->first();
 
             $counters[$i] = [
-                'ticket' => $ticket?->ticket_number ?? '-',
+                'ticket' => $ticket ? 'C' . str_pad($ticket->ticket_number, 3, '0', STR_PAD_LEFT) : '-',
                 'user'   => $user?->full_name ?? 'Unassigned'
             ];
         }
@@ -164,7 +219,7 @@ class AdminController extends Controller
 
     /**
      * =========================
-     * TICKET MANAGEMENT
+     * TICKET MANAGEMENT VIEW
      * =========================
      */
     public function ticketManagement()
@@ -176,7 +231,9 @@ class AdminController extends Controller
     public function deleteTicket($id)
     {
         Queue::findOrFail($id)->delete();
-        return redirect()->back()->with('success', 'Ticket deleted successfully.');
+
+        return redirect()->back()
+            ->with('success', 'Ticket deleted successfully.');
     }
 
     /**
