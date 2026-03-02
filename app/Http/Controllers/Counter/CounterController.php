@@ -22,7 +22,7 @@ class CounterController extends Controller
             abort(403, 'No counter assigned.');
         }
 
-        // ✅ MARK COUNTER AS ONLINE
+        // MARK COUNTER AS ONLINE
         DB::table('counters')
             ->where('id', $user->counter_id)
             ->update([
@@ -31,15 +31,15 @@ class CounterController extends Controller
             ]);
 
         return view('counter.dashboard', [
-            'user' => $user,
+            'user'      => $user,
             'counterId' => $user->counter_id,
-            'fullName' => $user->full_name ?? $user->user_id
+            'fullName'  => $user->full_name ?? $user->user_id
         ]);
     }
 
     /**
      * =========================
-     * SERVE NEXT TICKET
+     * SERVE NEXT ASSIGNED TICKET
      * =========================
      */
     public function serveNextTicket()
@@ -47,7 +47,9 @@ class CounterController extends Controller
         $counterId = Auth::user()->counter_id;
 
         if (!$counterId) {
-            return response()->json(['message' => 'No counter assigned.'], 400);
+            return response()->json([
+                'message' => 'No counter assigned.'
+            ], 400);
         }
 
         // Check if already serving
@@ -59,27 +61,28 @@ class CounterController extends Controller
         if ($currentServing) {
             return response()->json([
                 'message' => 'Already serving a ticket.',
-                'ticket' => $currentServing->ticket_number
+                'ticket'  => $currentServing->ticket_number
             ], 400);
         }
 
-        // ✅ GET OLDEST UNASSIGNED WAITING TICKET
+        // GET OLDEST WAITING TICKET ASSIGNED TO THIS COUNTER
         $nextTicket = DB::table('queues')
+            ->where('counter_id', $counterId)
             ->where('status', 'waiting')
-            ->whereNull('counter_id')
             ->orderBy('id', 'asc')
             ->first();
 
         if (!$nextTicket) {
-            return response()->json(['message' => 'No waiting tickets.'], 400);
+            return response()->json([
+                'message' => 'No assigned waiting tickets.'
+            ], 400);
         }
 
-        // ✅ ASSIGN TICKET TO THIS COUNTER
+        // UPDATE STATUS TO SERVING (DO NOT CHANGE counter_id)
         DB::table('queues')
             ->where('id', $nextTicket->id)
             ->update([
                 'status' => 'serving',
-                'counter_id' => $counterId,
                 'updated_at' => now()
             ]);
 
@@ -99,7 +102,9 @@ class CounterController extends Controller
         $counterId = Auth::user()->counter_id;
 
         if (!$counterId) {
-            return response()->json(['message' => 'No counter assigned.'], 400);
+            return response()->json([
+                'message' => 'No counter assigned.'
+            ], 400);
         }
 
         $currentTicket = DB::table('queues')
@@ -108,7 +113,9 @@ class CounterController extends Controller
             ->first();
 
         if (!$currentTicket) {
-            return response()->json(['message' => 'No ticket serving.'], 400);
+            return response()->json([
+                'message' => 'No ticket currently serving.'
+            ], 400);
         }
 
         DB::table('queues')
@@ -141,19 +148,19 @@ class CounterController extends Controller
             ]);
         }
 
-        // Currently serving
+        // CURRENTLY SERVING
         $serving = DB::table('queues')
             ->where('counter_id', $counterId)
             ->where('status', 'serving')
             ->value('ticket_number');
 
-        // Count all UNASSIGNED waiting tickets
+        // COUNT WAITING ASSIGNED TO THIS COUNTER
         $waiting = DB::table('queues')
+            ->where('counter_id', $counterId)
             ->where('status', 'waiting')
-            ->whereNull('counter_id')
             ->count();
 
-        // Last completed ticket
+        // LAST COMPLETED
         $lastDone = DB::table('queues')
             ->where('counter_id', $counterId)
             ->where('status', 'done')
@@ -176,7 +183,7 @@ class CounterController extends Controller
     {
         $user = Auth::user();
 
-        // ✅ MARK COUNTER OFFLINE
+        // MARK COUNTER OFFLINE
         if ($user && $user->counter_id) {
             DB::table('counters')
                 ->where('id', $user->counter_id)
