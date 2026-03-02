@@ -22,7 +22,7 @@ class CounterController extends Controller
             abort(403, 'No counter assigned.');
         }
 
-        // Mark counter (user) as online
+        // Mark counter user as online
         DB::table('users')
             ->where('id', $user->id)
             ->update([
@@ -39,13 +39,12 @@ class CounterController extends Controller
 
     /**
      * =========================
-     * SERVE NEXT TICKET (FIFO)
+     * SERVE NEXT TICKET (FIXED)
      * =========================
      */
     public function serveNextTicket()
     {
-        $user = Auth::user();
-        $counterId = $user->counter_id ?? null;
+        $counterId = Auth::user()->counter_id;
 
         if (!$counterId) {
             return response()->json([
@@ -53,7 +52,7 @@ class CounterController extends Controller
             ], 400);
         }
 
-        // Prevent serving multiple tickets
+        // Prevent double serving
         $currentServing = DB::table('queues')
             ->where('counter_id', $counterId)
             ->where('status', 'serving')
@@ -75,7 +74,7 @@ class CounterController extends Controller
 
         if (!$nextTicket) {
             return response()->json([
-                'message' => 'No assigned waiting tickets.'
+                'message' => 'No waiting tickets for this counter.'
             ], 400);
         }
 
@@ -83,7 +82,7 @@ class CounterController extends Controller
         DB::table('queues')
             ->where('id', $nextTicket->id)
             ->update([
-                'status' => 'serving',
+                'status'     => 'serving',
                 'updated_at' => now()
             ]);
 
@@ -100,8 +99,7 @@ class CounterController extends Controller
      */
     public function completeCurrentTicket()
     {
-        $user = Auth::user();
-        $counterId = $user->counter_id ?? null;
+        $counterId = Auth::user()->counter_id;
 
         if (!$counterId) {
             return response()->json([
@@ -123,7 +121,7 @@ class CounterController extends Controller
         DB::table('queues')
             ->where('id', $currentTicket->id)
             ->update([
-                'status' => 'done',
+                'status'     => 'done',
                 'updated_at' => now()
             ]);
 
@@ -135,13 +133,12 @@ class CounterController extends Controller
 
     /**
      * =========================
-     * LIVE STATUS
+     * LIVE STATUS (FIXED)
      * =========================
      */
     public function getStatus()
     {
-        $user = Auth::user();
-        $counterId = $user->counter_id ?? null;
+        $counterId = Auth::user()->counter_id;
 
         if (!$counterId) {
             return response()->json([
@@ -157,13 +154,13 @@ class CounterController extends Controller
             ->where('status', 'serving')
             ->value('ticket_number');
 
-        // Waiting tickets for this counter
+        // WAITING tickets assigned to this counter
         $waiting = DB::table('queues')
             ->where('counter_id', $counterId)
             ->where('status', 'waiting')
             ->count();
 
-        // Last done ticket
+        // Last completed ticket
         $lastDone = DB::table('queues')
             ->where('counter_id', $counterId)
             ->where('status', 'done')
