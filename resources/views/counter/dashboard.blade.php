@@ -152,48 +152,59 @@
 
 <script>
 
-    // 🔥 IMPORTANT FOR LARAVEL SESSION
+    // 🔥 REQUIRED FOR LARAVEL SESSION ON RENDER
     axios.defaults.withCredentials = true;
 
     // CSRF TOKEN
     axios.defaults.headers.common['X-CSRF-TOKEN'] =
         document.querySelector('meta[name="csrf-token"]').content;
 
-    function nextTicket() {
-        axios.post("{{ route('counter.serveTicket') }}")
-            .then(() => {
-                loadStats();
-            })
-            .catch(error => {
-                alert(error.response?.data?.message ?? 'No waiting tickets.');
+    async function loadStats() {
+        try {
+            const response = await axios.get("{{ route('counter.status') }}", {
+                withCredentials: true
             });
+
+            document.getElementById('serving').innerText =
+                response.data.serving ?? '---';
+
+            document.getElementById('waiting').innerText =
+                response.data.waiting ?? 0;
+
+            document.getElementById('done').innerText =
+                response.data.last_done ?? '---';
+
+        } catch (error) {
+            console.log("Status error:", error.response);
+        }
     }
 
-    function completeTicket() {
-        axios.post("{{ route('counter.completeTicket') }}")
-            .then(() => loadStats())
-            .catch(error => {
-                alert(error.response?.data?.message ?? 'No serving ticket.');
+    async function nextTicket() {
+        try {
+            await axios.post("{{ route('counter.serveTicket') }}", {}, {
+                withCredentials: true
             });
+
+            loadStats();
+
+        } catch (error) {
+            alert(error.response?.data?.message ?? 'No waiting tickets.');
+        }
     }
 
-    function loadStats() {
-        axios.get("{{ route('counter.status') }}")
-            .then(response => {
+    async function completeTicket() {
+        try {
+            await axios.post("{{ route('counter.completeTicket') }}", {}, {
+                withCredentials: true
+            });
 
-                document.getElementById('serving').innerText =
-                    response.data.serving ?? '---';
+            loadStats();
 
-                document.getElementById('waiting').innerText =
-                    response.data.waiting ?? 0;
-
-                document.getElementById('done').innerText =
-                    response.data.last_done ?? '---';
-            })
-            .catch(err => console.log(err));
+        } catch (error) {
+            alert(error.response?.data?.message ?? 'No serving ticket.');
+        }
     }
 
-    // Auto refresh every 3 seconds
     setInterval(loadStats, 3000);
     loadStats();
 
