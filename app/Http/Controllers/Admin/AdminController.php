@@ -113,6 +113,29 @@ class AdminController extends Controller
 
     /**
      * =========================
+     * MANUAL ASSIGN TICKETS TO COUNTER
+     * =========================
+     */
+    public function assignTicketsToCounter(Request $request)
+    {
+        $request->validate([
+            'counter_id' => 'required|integer',
+            'ticket_ids' => 'required|array'
+        ]);
+
+        Queue::whereIn('id', $request->ticket_ids)
+            ->where('status', 'waiting')
+            ->update([
+                'counter_id' => $request->counter_id,
+                'updated_at' => now()
+            ]);
+
+        return redirect()->back()
+            ->with('success', 'Tickets assigned successfully.');
+    }
+
+    /**
+     * =========================
      * DISPLAY SCREEN (TV)
      * =========================
      */
@@ -139,62 +162,6 @@ class AdminController extends Controller
         return view('admin.displayscreen', compact('counters'));
     }
 
-    public function getCounters()
-    {
-        $counters = [];
-
-        for ($i = 1; $i <= 5; $i++) {
-
-            $ticket = Queue::where('status', 'serving')
-                ->where('counter_id', $i)
-                ->latest('id')
-                ->first();
-
-            $user = User::where('counter_id', $i)->first();
-
-            $counters[$i] = [
-                'ticket' => $ticket?->ticket_number ?? '-',
-                'user'   => $user?->full_name ?? 'Unassigned'
-            ];
-        }
-
-        return response()->json($counters);
-    }
-
-    /**
-     * =========================
-     * COUNTER ONLINE STATUS
-     * =========================
-     */
-    public function getCounterStatus()
-    {
-        $counters = [];
-
-        for ($i = 1; $i <= 5; $i++) {
-
-            $user = User::where('counter_id', $i)->first();
-
-            if ($user) {
-
-                $counter = DB::table('counters')
-                    ->where('id', $i)
-                    ->first();
-
-                $counters[$i] = [
-                    'user'   => $user->full_name ?? $user->user_id,
-                    'status' => ($counter && $counter->is_online) ? 'online' : 'offline'
-                ];
-            } else {
-                $counters[$i] = [
-                    'user'   => 'Unassigned',
-                    'status' => 'offline'
-                ];
-            }
-        }
-
-        return response()->json($counters);
-    }
-
     /**
      * =========================
      * TICKET MANAGEMENT
@@ -202,7 +169,7 @@ class AdminController extends Controller
      */
     public function ticketManagement()
     {
-        $tickets = Queue::orderBy('ticket_number', 'asc')->get();
+        $tickets = Queue::orderBy('id', 'asc')->get();
         return view('admin.ticket-management', compact('tickets'));
     }
 
