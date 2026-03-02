@@ -136,44 +136,15 @@ class CounterController extends Controller
      * LIVE STATUS (FIXED)
      * =========================
      */
-    public function getStatus()
-    {
-        $counterId = Auth::user()->counter_id;
-
-        if (!$counterId) {
-            return response()->json([
-                'serving'   => null,
-                'waiting'   => 0,
-                'last_done' => null
-            ]);
-        }
-
-        // Currently serving
-        $serving = DB::table('queues')
-            ->where('counter_id', $counterId)
-            ->where('status', 'serving')
-            ->value('ticket_number');
-
-        // WAITING tickets assigned to this counter
-        $waiting = DB::table('queues')
-            ->where('counter_id', $counterId)
+  public function getStatus()
+{
+    return response()->json([
+        'user_counter_id' => Auth::user()->counter_id,
+        'total_waiting_in_db' => DB::table('queues')
             ->where('status', 'waiting')
-            ->count();
-
-        // Last completed ticket
-        $lastDone = DB::table('queues')
-            ->where('counter_id', $counterId)
-            ->where('status', 'done')
-            ->orderByDesc('updated_at')
-            ->value('ticket_number');
-
-        return response()->json([
-            'serving'   => $serving,
-            'waiting'   => $waiting,
-            'last_done' => $lastDone
-        ]);
-    }
-
+            ->count(),
+    ]);
+}
     /**
      * =========================
      * LOGOUT
