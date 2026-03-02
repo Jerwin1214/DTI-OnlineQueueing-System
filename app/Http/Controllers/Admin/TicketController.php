@@ -24,30 +24,43 @@ class TicketController extends Controller
 
     /**
      * ====================
-     * Add Tickets
+     * Add Tickets (WITH COUNTER ASSIGNMENT)
      * ====================
      */
     public function add(Request $request)
     {
         $request->validate([
             'ticket_count' => 'required|integer|min:1|max:100',
+            'counters'     => 'nullable|array'
         ]);
 
         DB::beginTransaction();
 
         try {
 
-            // Get last ticket number safely
-            $lastNumber = DB::table('queues')->max('ticket_number');
-            $lastNumber = $lastNumber ?? 0;
+            $lastNumber = DB::table('queues')->max('ticket_number') ?? 0;
+
+            $counters = $request->counters ?? [];
 
             for ($i = 1; $i <= $request->ticket_count; $i++) {
 
                 $lastNumber++;
 
+                // If counters selected → distribute
+                if (!empty($counters)) {
+
+                    $counterIndex = ($i - 1) % count($counters);
+                    $assignedCounter = $counters[$counterIndex];
+
+                } else {
+
+                    // If no counter selected → leave NULL
+                    $assignedCounter = null;
+                }
+
                 DB::table('queues')->insert([
                     'ticket_number' => $lastNumber,
-                    'counter_id'    => null, // MUST BE NULL
+                    'counter_id'    => $assignedCounter,
                     'status'        => 'waiting',
                     'created_at'    => now(),
                     'updated_at'    => now()
