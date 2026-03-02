@@ -51,7 +51,6 @@
 
         .buttons {
             display: flex;
-            justify-content: center;
             gap: 15px;
             margin-bottom: 20px;
         }
@@ -64,11 +63,6 @@
             border: none;
             border-radius: 12px;
             cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .buttons button:hover {
-            transform: translateY(-2px);
         }
 
         .btn-next { background: #2979ff; color: #fff; }
@@ -76,7 +70,6 @@
 
         .stats {
             display: flex;
-            justify-content: space-between;
             gap: 10px;
             margin-bottom: 15px;
         }
@@ -107,10 +100,6 @@
             background: #555;
             color: #fff;
             cursor: pointer;
-        }
-
-        .logout button:hover {
-            background: #777;
         }
     </style>
 </head>
@@ -159,32 +148,21 @@
         </form>
     </div>
 
-    <audio id="nextSound" preload="auto">
-        <source src="{{ asset('storage/audios/doorbell-223669.mp3') }}" type="audio/mpeg">
-    </audio>
-
 </div>
 
 <script>
 
-    // ✅ CRITICAL FIX FOR SESSION AUTH (VERY IMPORTANT)
+    // 🔥 IMPORTANT FOR LARAVEL SESSION
     axios.defaults.withCredentials = true;
 
     // CSRF TOKEN
     axios.defaults.headers.common['X-CSRF-TOKEN'] =
         document.querySelector('meta[name="csrf-token"]').content;
 
-    function playNextSound() {
-        const sound = document.getElementById('nextSound');
-        sound.currentTime = 0;
-        sound.play().catch(() => {});
-    }
-
     function nextTicket() {
         axios.post("{{ route('counter.serveTicket') }}")
             .then(() => {
                 loadStats();
-                playNextSound();
             })
             .catch(error => {
                 alert(error.response?.data?.message ?? 'No waiting tickets.');
