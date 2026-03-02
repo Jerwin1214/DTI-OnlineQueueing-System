@@ -13,27 +13,51 @@
             Generate Tickets
         </h2>
 
+        {{-- SUCCESS MESSAGE --}}
         @if(session('success'))
             <div class="bg-green-500 text-white p-2 rounded mb-4 text-sm">
                 {{ session('success') }}
             </div>
         @endif
 
+        {{-- VALIDATION ERRORS --}}
+        @if($errors->any())
+            <div class="bg-red-500 text-white p-2 rounded mb-4 text-sm">
+                <ul class="list-disc list-inside">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <form action="{{ route('admin.ticket.add') }}" method="POST" class="space-y-4">
             @csrf
 
+            <!-- Ticket Count -->
             <div>
-                <label class="block mb-1 font-medium text-gray-200">Number of Tickets</label>
-                <input type="number" name="ticket_count" min="1" required
+                <label class="block mb-1 font-medium text-gray-200">
+                    Number of Tickets
+                </label>
+                <input type="number"
+                       name="ticket_count"
+                       min="1"
+                       required
                        class="w-full rounded-lg p-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
             </div>
 
+            <!-- Counter Selection -->
             <div>
-                <label class="block mb-1 font-medium text-gray-200">Select Counters</label>
+                <label class="block mb-1 font-medium text-gray-200">
+                    Select Counters
+                </label>
+
                 <div class="flex flex-col space-y-2">
                     @for($i = 1; $i <= 5; $i++)
                         <label class="inline-flex items-center space-x-2 text-gray-200">
-                            <input type="checkbox" name="counters[]" value="{{ $i }}"
+                            <input type="checkbox"
+                                   name="counters[]"
+                                   value="{{ $i }}"
                                    class="form-checkbox h-4 w-4 text-blue-500 rounded">
                             <span>Counter {{ $i }}</span>
                         </label>
@@ -41,13 +65,14 @@
                 </div>
             </div>
 
+            <!-- Submit Button -->
             <button type="submit"
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition">
                 Add Tickets
             </button>
         </form>
 
-        <!-- CLEAR ALL -->
+        <!-- CLEAR ALL TICKETS -->
         <form action="{{ route('admin.ticket.clear') }}" method="POST" class="mt-4">
             @csrf
             @method('DELETE')
@@ -82,51 +107,78 @@
                         <th class="p-3 text-left">Action</th>
                     </tr>
                 </thead>
+
                 <tbody class="text-gray-700 text-sm">
-                    @foreach($tickets as $ticket)
+                    @forelse($tickets as $ticket)
                         <tr class="border-b hover:bg-gray-100 transition">
+
+                            <!-- ID -->
                             <td class="p-3">{{ $ticket->id }}</td>
 
-                            <!-- Formatted Ticket Number C001, C002, etc. -->
+                            <!-- Formatted Ticket Number -->
                             <td class="p-3 font-medium">
                                 {{ 'C' . str_pad($ticket->ticket_number, 3, '0', STR_PAD_LEFT) }}
                             </td>
 
-                            <td class="p-3">Counter {{ $ticket->counter_id }}</td>
+                            <!-- Counter -->
                             <td class="p-3">
-                                @if($ticket->status === 'pending')
+                                @if($ticket->counter_id)
+                                    Counter {{ $ticket->counter_id }}
+                                @else
+                                    <span class="text-gray-400 italic">Not Assigned</span>
+                                @endif
+                            </td>
+
+                            <!-- UPDATED STATUS SYSTEM -->
+                            <td class="p-3">
+                                @if($ticket->status === 'waiting')
                                     <span class="bg-yellow-200 text-yellow-800 px-2 py-1 rounded-full text-xs">
-                                        Pending
+                                        Waiting
                                     </span>
-                                @elseif($ticket->status === 'served')
+
+                                @elseif($ticket->status === 'serving')
+                                    <span class="bg-blue-200 text-blue-800 px-2 py-1 rounded-full text-xs">
+                                        Serving
+                                    </span>
+
+                                @elseif($ticket->status === 'done')
                                     <span class="bg-green-200 text-green-800 px-2 py-1 rounded-full text-xs">
-                                        Served
+                                        Done
                                     </span>
+
                                 @else
                                     <span class="bg-gray-200 text-gray-800 px-2 py-1 rounded-full text-xs">
                                         {{ ucfirst($ticket->status) }}
                                     </span>
                                 @endif
                             </td>
+
+                            <!-- Delete -->
                             <td class="p-3">
-                                <form action="{{ route('admin.ticket.delete', $ticket->id) }}" method="POST">
+                                <form action="{{ route('admin.ticket.delete', $ticket->id) }}"
+                                      method="POST"
+                                      onsubmit="return confirm('Are you sure you want to delete this ticket?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition">
+
+                                    <button type="submit"
+                                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition">
                                         Delete
                                     </button>
                                 </form>
                             </td>
+
                         </tr>
-                    @endforeach
-                    @if($tickets->isEmpty())
+                    @empty
                         <tr>
-                            <td colspan="5" class="p-3 text-center text-gray-500 italic">
+                            <td colspan="5"
+                                class="p-3 text-center text-gray-500 italic">
                                 No tickets available.
                             </td>
                         </tr>
-                    @endif
+                    @endforelse
                 </tbody>
+
             </table>
         </div>
 
