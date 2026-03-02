@@ -24,7 +24,7 @@ class TicketController extends Controller
 
     /**
      * ====================
-     * Add Tickets (WITH COUNTER ASSIGNMENT)
+     * Add Tickets (FIXED)
      * ====================
      */
     public function add(Request $request)
@@ -38,23 +38,25 @@ class TicketController extends Controller
 
         try {
 
+            // Get last ticket number
             $lastNumber = DB::table('queues')->max('ticket_number') ?? 0;
 
-            $counters = $request->counters ?? [];
+            // Get selected counters safely
+            $counters = $request->has('counters') ? $request->counters : [];
 
             for ($i = 1; $i <= $request->ticket_count; $i++) {
 
                 $lastNumber++;
 
-                // If counters selected → distribute
-                if (!empty($counters)) {
+                // If counters are selected → distribute
+                if (is_array($counters) && count($counters) > 0) {
 
                     $counterIndex = ($i - 1) % count($counters);
-                    $assignedCounter = $counters[$counterIndex];
+                    $assignedCounter = (int) $counters[$counterIndex];
 
                 } else {
 
-                    // If no counter selected → leave NULL
+                    // No counter selected → keep NULL
                     $assignedCounter = null;
                 }
 
@@ -75,7 +77,7 @@ class TicketController extends Controller
 
             DB::rollBack();
 
-            return back()->with('error', 'Something went wrong while adding tickets.');
+            return back()->with('error', 'Error adding tickets.');
         }
     }
 
