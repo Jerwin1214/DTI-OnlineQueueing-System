@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Counter Dashboard</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <style>
@@ -158,7 +159,6 @@
         </form>
     </div>
 
-    <!-- AUDIO -->
     <audio id="nextSound" preload="auto">
         <source src="{{ asset('storage/audios/doorbell-223669.mp3') }}" type="audio/mpeg">
     </audio>
@@ -167,59 +167,57 @@
 
 <script>
 
-// CSRF
-axios.defaults.headers.common['X-CSRF-TOKEN'] =
-    document.querySelector('meta[name="csrf-token"]').content;
+    // ✅ CRITICAL FIX FOR SESSION AUTH (VERY IMPORTANT)
+    axios.defaults.withCredentials = true;
 
-/* PLAY SOUND */
-function playNextSound() {
-    const sound = document.getElementById('nextSound');
-    sound.currentTime = 0;
-    sound.play().catch(() => {});
-}
+    // CSRF TOKEN
+    axios.defaults.headers.common['X-CSRF-TOKEN'] =
+        document.querySelector('meta[name="csrf-token"]').content;
 
-/* NEXT */
-function nextTicket() {
-    axios.post("{{ route('counter.serveTicket') }}")
-        .then(() => {
-            loadStats();
-            playNextSound();
-        })
-        .catch(error => {
-            alert(error.response?.data?.message ?? 'No waiting tickets.');
-        });
-}
+    function playNextSound() {
+        const sound = document.getElementById('nextSound');
+        sound.currentTime = 0;
+        sound.play().catch(() => {});
+    }
 
-/* DONE */
-function completeTicket() {
-    axios.post("{{ route('counter.completeTicket') }}")
-        .then(() => loadStats())
-        .catch(error => {
-            alert(error.response?.data?.message ?? 'No serving ticket.');
-        });
-}
+    function nextTicket() {
+        axios.post("{{ route('counter.serveTicket') }}")
+            .then(() => {
+                loadStats();
+                playNextSound();
+            })
+            .catch(error => {
+                alert(error.response?.data?.message ?? 'No waiting tickets.');
+            });
+    }
 
-/* LOAD STATS */
-function loadStats() {
-    axios.get("{{ route('counter.status') }}")
-        .then(response => {
+    function completeTicket() {
+        axios.post("{{ route('counter.completeTicket') }}")
+            .then(() => loadStats())
+            .catch(error => {
+                alert(error.response?.data?.message ?? 'No serving ticket.');
+            });
+    }
 
-            // Backend already returns formatted C001
-            document.getElementById('serving').innerText =
-                response.data.serving ?? '---';
+    function loadStats() {
+        axios.get("{{ route('counter.status') }}")
+            .then(response => {
 
-            document.getElementById('waiting').innerText =
-                response.data.waiting ?? 0;
+                document.getElementById('serving').innerText =
+                    response.data.serving ?? '---';
 
-            document.getElementById('done').innerText =
-                response.data.last_done ?? '---';
-        })
-        .catch(err => console.log(err));
-}
+                document.getElementById('waiting').innerText =
+                    response.data.waiting ?? 0;
 
-/* Auto refresh */
-setInterval(loadStats, 3000);
-loadStats();
+                document.getElementById('done').innerText =
+                    response.data.last_done ?? '---';
+            })
+            .catch(err => console.log(err));
+    }
+
+    // Auto refresh every 3 seconds
+    setInterval(loadStats, 3000);
+    loadStats();
 
 </script>
 
