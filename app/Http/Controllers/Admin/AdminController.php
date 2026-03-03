@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Models\Queue;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
@@ -29,7 +28,7 @@ class AdminController extends Controller
     */
     public function users()
     {
-        $users = User::latest()->get();
+        $users = User::orderBy('id', 'asc')->get(); // fixed ordering
         return view('admin.users', compact('users'));
     }
 
@@ -64,7 +63,7 @@ class AdminController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | 🔥 DISPLAY SCREEN - CURRENT SERVING TICKETS
+    | DISPLAY SCREEN - CURRENT SERVING TICKETS
     |--------------------------------------------------------------------------
     */
     public function getCounters()
@@ -74,9 +73,10 @@ class AdminController extends Controller
 
         foreach ($counters as $counterId) {
 
+            // get latest serving ticket properly ordered
             $ticket = Queue::where('counter_id', $counterId)
                 ->where('status', 'serving')
-                ->latest('updated_at')
+                ->orderBy('id', 'desc')   // FIXED (stable)
                 ->first();
 
             $data[$counterId] = [
@@ -91,12 +91,15 @@ class AdminController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | 🔥 COUNTER ONLINE / OFFLINE STATUS
+    | COUNTER ONLINE / OFFLINE STATUS
     |--------------------------------------------------------------------------
     */
     public function getCounterStatus()
     {
-        $counters = User::where('role', 'counter')->get();
+        $counters = User::where('role', 'counter')
+                        ->orderBy('counter_id', 'asc')
+                        ->get();
+
         $data = [];
 
         foreach ($counters as $counter) {
@@ -132,7 +135,9 @@ class AdminController extends Controller
     */
     public function ticketManagement()
     {
+        // 🔥 FIXED ORDERING (REAL QUEUE ORDER)
         $tickets = Queue::orderBy('id', 'asc')->get();
+
         return view('admin.ticket-management', compact('tickets'));
     }
 
