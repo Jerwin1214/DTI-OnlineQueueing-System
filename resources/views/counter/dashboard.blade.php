@@ -201,8 +201,10 @@
     }
 
     // Auto refresh every 3 seconds
-    setInterval(loadStats, 3000);
+document.addEventListener("DOMContentLoaded", function () {
     loadStats();
+    setInterval(loadStats, 3000);
+});
 
 </script>
 
