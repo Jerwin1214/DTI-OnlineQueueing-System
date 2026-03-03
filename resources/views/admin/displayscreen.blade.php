@@ -47,11 +47,10 @@ html, body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #ffffff;
+    background: white;
     color: #1e40af;
     padding: 0.75rem 1rem;
     border-radius: 0.75rem;
-    font-family: sans-serif;
 }
 
 #countersPanel {
@@ -60,15 +59,12 @@ html, body {
     flex-direction: column;
     align-items: flex-end;
     gap: 1rem;
-    padding-top: 0.5rem;
-    width: 100%;
 }
 
 #txtTopNowServing {
     font-size: 2.5rem;
     color: white;
     font-weight: bold;
-    margin: 0;
     text-align: right;
 }
 
@@ -76,11 +72,10 @@ html, body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #1e3a8a;
+    background: #1e3a8a;
     padding: 1rem 2rem;
     border-radius: 0.75rem;
     width: 100%;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
 .counterLabel {
@@ -100,10 +95,9 @@ html, body {
     left: 0.5rem;
     font-size: 2rem;
     color: white;
-    cursor: pointer;
-    z-index: 50;
     background: transparent;
     border: none;
+    cursor: pointer;
 }
 </style>
 
@@ -112,39 +106,22 @@ html, body {
     <!-- VIDEO -->
     <div id="videoPanel">
 
-        <!-- ✅ FIXED VIDEO FOR RENDER -->
         <video id="videoPlayer"
                autoplay
                loop
                muted
-               playsinline
-               preload="auto">
+               playsinline>
 
-            <source src="{{ asset('storage/VIDEOFORQUEUING.mp4') }}"
-                    type="video/mp4">
-
-            Your browser does not support the video tag.
+            <source src="{{ asset('storage/VIDEOFORQUEUING.mp4') }}" type="video/mp4">
         </video>
 
         <button id="btnFullscreen">⛶</button>
 
-        <!-- DATE / TIME / LOGOS -->
         <div id="dateTimePanel">
-
-            <img src="{{ asset('storage/logoDTI.png') }}"
-                 class="h-24 object-contain"
-                 alt="Logo Left">
-
-            <div class="text-center">
-                <div id="txtClock" class="text-5xl font-bold"></div>
-                <div id="txtDate" class="text-2xl mt-1"></div>
-            </div>
-
-            <img src="{{ asset('storage/bagongpilipinas2.png') }}"
-                 class="h-24 object-contain"
-                 alt="Logo Right">
-
+            <div id="txtClock"></div>
+            <div id="txtDate"></div>
         </div>
+
     </div>
 
     <!-- COUNTERS -->
@@ -158,12 +135,11 @@ html, body {
         </div>
         @endforeach
     </div>
+
 </div>
 
-<!-- AUDIO -->
 <audio id="nextSound" preload="auto">
-    <source src="{{ asset('storage/doorbell-223669.mp3') }}"
-            type="audio/mpeg">
+    <source src="{{ asset('storage/doorbell-223669.mp3') }}" type="audio/mpeg">
 </audio>
 
 @endsection
@@ -179,23 +155,21 @@ function updateClock() {
     const seconds = now.getSeconds().toString().padStart(2,'0');
     const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
 
-    document.getElementById('txtClock').textContent =
+    document.getElementById('txtClock').innerText =
         `${hours}:${minutes}:${seconds} ${ampm}`;
 
-    document.getElementById('txtDate').textContent =
-        now.toLocaleDateString('en-US', {
-            weekday: 'long',
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric'
-        });
+    document.getElementById('txtDate').innerText =
+        now.toDateString();
 }
+
 setInterval(updateClock, 1000);
 updateClock();
 
 
 // FULLSCREEN
-document.getElementById('btnFullscreen').addEventListener('click', () => {
+document.getElementById('btnFullscreen')
+.addEventListener('click', () => {
+
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen();
     } else {
@@ -204,34 +178,33 @@ document.getElementById('btnFullscreen').addEventListener('click', () => {
 });
 
 
-// FETCH COUNTERS
+// FETCH COUNTERS (FIXED VERSION)
 function fetchCounters() {
-    fetch("{{ route('admin.getCounters') }}", {
-        headers: { "X-Requested-With": "XMLHttpRequest" }
-    })
-    .then(res => res.json())
-    .then(data => {
 
-        @foreach($selectedCounters as $i)
-        const el{{ $i }} = document.getElementById('txtServingNumber{{ $i }}');
+    fetch("{{ route('admin.getCounters') }}")
+        .then(res => res.json())
+        .then(data => {
 
-        if (el{{ $i }} && data[{{ $i }}]) {
+            @foreach($selectedCounters as $i)
 
-            let newTicket = 'C000';
+            const el{{ $i }} =
+                document.getElementById('txtServingNumber{{ $i }}');
 
-            if (data[{{ $i }}].ticket !== null) {
-                const ticketNum = parseInt(data[{{ $i }}].ticket);
-                if (!isNaN(ticketNum)) {
-                    newTicket = 'C' + ticketNum.toString().padStart(3,'0');
+            if (el{{ $i }}) {
+
+                if (data[{{ $i }}] && data[{{ $i }}].ticket) {
+                    el{{ $i }}.innerText =
+                        data[{{ $i }}].ticket;
+                } else {
+                    el{{ $i }}.innerText = 'C000';
                 }
+
             }
 
-            el{{ $i }}.textContent = newTicket;
-        }
-        @endforeach
+            @endforeach
 
-    })
-    .catch(err => console.error("Counter fetch error:", err));
+        })
+        .catch(err => console.log("Display fetch error:", err));
 }
 
 setInterval(fetchCounters, 2000);
