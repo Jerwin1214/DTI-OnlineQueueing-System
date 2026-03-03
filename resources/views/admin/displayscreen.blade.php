@@ -99,11 +99,17 @@ html, body {
     border: none;
     cursor: pointer;
 }
+
+/* 🔥 LOGO SIZE FIX */
+.logo-img {
+    height: 80px;
+    object-fit: contain;
+}
 </style>
 
 <div id="displayScreenContainer">
 
-    <!-- VIDEO -->
+    <!-- VIDEO PANEL -->
     <div id="videoPanel">
 
         <video id="videoPlayer"
@@ -117,9 +123,22 @@ html, body {
 
         <button id="btnFullscreen">⛶</button>
 
+        <!-- 🔥 DATE + LOGOS RESTORED -->
         <div id="dateTimePanel">
-            <div id="txtClock"></div>
-            <div id="txtDate"></div>
+
+            <img src="{{ asset('storage/logoDTI.png') }}"
+                 class="logo-img"
+                 alt="Left Logo">
+
+            <div class="text-center">
+                <div id="txtClock"></div>
+                <div id="txtDate"></div>
+            </div>
+
+            <img src="{{ asset('storage/bagongpilipinas2.png') }}"
+                 class="logo-img"
+                 alt="Right Logo">
+
         </div>
 
     </div>
@@ -146,6 +165,8 @@ html, body {
 
 @section('scripts')
 <script>
+
+let previousTickets = {};
 
 // CLOCK
 function updateClock() {
@@ -178,7 +199,15 @@ document.getElementById('btnFullscreen')
 });
 
 
-// FETCH COUNTERS (FIXED VERSION)
+// SOUND
+function playSound() {
+    const sound = document.getElementById('nextSound');
+    sound.currentTime = 0;
+    sound.play().catch(() => {});
+}
+
+
+// FETCH COUNTERS WITH SOUND
 function fetchCounters() {
 
     fetch("{{ route('admin.getCounters') }}")
@@ -187,19 +216,27 @@ function fetchCounters() {
 
             @foreach($selectedCounters as $i)
 
-            const el{{ $i }} =
-                document.getElementById('txtServingNumber{{ $i }}');
+            const counterId = {{ $i }};
+            const el = document.getElementById('txtServingNumber{{ $i }}');
 
-            if (el{{ $i }}) {
+            if (!el) return;
 
-                if (data[{{ $i }}] && data[{{ $i }}].ticket) {
-                    el{{ $i }}.innerText =
-                        data[{{ $i }}].ticket;
-                } else {
-                    el{{ $i }}.innerText = 'C000';
+            let newTicket = 'C000';
+
+            if (data[counterId] && data[counterId].ticket) {
+                newTicket = data[counterId].ticket;
+            }
+
+            if (previousTickets[counterId] !== newTicket) {
+
+                if (previousTickets[counterId] !== undefined) {
+                    playSound();
                 }
 
+                previousTickets[counterId] = newTicket;
             }
+
+            el.innerText = newTicket;
 
             @endforeach
 
