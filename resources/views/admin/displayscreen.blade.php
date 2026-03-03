@@ -182,9 +182,24 @@ html, body {
 @endsection
 
 @section('scripts')
+@section('scripts')
 <script>
 
 let previousTickets = {};
+let firstLoad = true; // prevent sound on initial load
+
+// 🔥 PRELOAD + UNLOCK AUDIO (important for browsers & Smart TV)
+const sound = document.getElementById('nextSound');
+sound.load();
+
+// Unlock audio after first interaction (TV remote click, mouse click, etc.)
+document.addEventListener('click', function unlockAudio() {
+    sound.play().then(() => {
+        sound.pause();
+        sound.currentTime = 0;
+        document.removeEventListener('click', unlockAudio);
+    }).catch(() => {});
+});
 
 // CLOCK
 function updateClock() {
@@ -205,7 +220,7 @@ setInterval(updateClock, 1000);
 updateClock();
 
 
-// FULLSCREEN
+// FULLSCREEN (unchanged)
 document.getElementById('btnFullscreen')
 .addEventListener('click', () => {
 
@@ -217,18 +232,20 @@ document.getElementById('btnFullscreen')
 });
 
 
-// SOUND
+// 🔥 STRONGER SOUND FUNCTION
 function playSound() {
-    const sound = document.getElementById('nextSound');
+    sound.pause();
     sound.currentTime = 0;
-    sound.play().catch(() => {});
+    sound.play().catch(err => {
+        console.log("Sound play blocked:", err);
+    });
 }
 
 
-// FETCH COUNTERS WITH SOUND
+// FETCH COUNTERS WITH FIXED SOUND
 function fetchCounters() {
 
-    fetch("{{ route('admin.getCounters') }}")
+    fetch("{{ route('admin.getCounters') }}", { cache: "no-store" })
         .then(res => res.json())
         .then(data => {
 
@@ -245,19 +262,20 @@ function fetchCounters() {
                 newTicket = data[counterId].ticket;
             }
 
-            if (previousTickets[counterId] !== newTicket) {
+            // 🔥 ONLY PLAY SOUND IF VALUE REALLY CHANGED
+            if (previousTickets[counterId] !== undefined &&
+                previousTickets[counterId] !== newTicket &&
+                !firstLoad) {
 
-                if (previousTickets[counterId] !== undefined) {
-                    playSound();
-                }
-
-                previousTickets[counterId] = newTicket;
+                playSound();
             }
 
+            previousTickets[counterId] = newTicket;
             el.innerText = newTicket;
 
             @endforeach
 
+            firstLoad = false; // after first fetch
         })
         .catch(err => console.log("Display fetch error:", err));
 }
@@ -266,4 +284,5 @@ setInterval(fetchCounters, 2000);
 fetchCounters();
 
 </script>
+@endsection
 @endsection
