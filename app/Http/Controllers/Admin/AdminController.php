@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Queue;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
@@ -52,9 +53,7 @@ class AdminController extends Controller
             'password'   => Hash::make($request->password),
             'full_name'  => $request->full_name,
             'role'       => $request->role,
-            'counter_id' => $request->role === 'counter'
-                                ? $request->counter_id
-                                : null,
+            'counter_id' => $request->role === 'counter' ? $request->counter_id : null,
             'is_online'  => false,
         ]);
 
@@ -73,7 +72,6 @@ class AdminController extends Controller
 
         foreach ($counters as $counterId) {
 
-            // Get the latest SERVING ticket for this counter
             $ticket = Queue::where('counter_id', $counterId)
                 ->where('status', 'serving')
                 ->orderByDesc('updated_at')
@@ -91,7 +89,7 @@ class AdminController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | 🔥 COUNTER ONLINE / OFFLINE STATUS (RESTORED)
+    | 🔥 COUNTER ONLINE / OFFLINE STATUS
     |--------------------------------------------------------------------------
     */
     public function getCounterStatus()
