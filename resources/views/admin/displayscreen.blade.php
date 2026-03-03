@@ -55,7 +55,7 @@ html, body {
 
 /* 🔥 BIG CLOCK STYLE */
 #txtClock {
-    font-size: 4rem;
+    font-size: 3rem;
     font-weight: 800;
     line-height: 1.1;
 }
