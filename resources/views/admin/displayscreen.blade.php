@@ -49,8 +49,22 @@ html, body {
     align-items: center;
     background: white;
     color: #1e40af;
-    padding: 0.75rem 1rem;
+    padding: 1rem;
     border-radius: 0.75rem;
+}
+
+/* 🔥 BIG CLOCK STYLE */
+#txtClock {
+    font-size: 4rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+/* 🔥 BIG DATE STYLE */
+#txtDate {
+    font-size: 2rem;
+    margin-top: 5px;
+    font-weight: 600;
 }
 
 #countersPanel {
@@ -100,9 +114,9 @@ html, body {
     cursor: pointer;
 }
 
-/* 🔥 LOGO SIZE FIX */
+/* 🔥 LOGO SIZE */
 .logo-img {
-    height: 80px;
+    height: 90px;
     object-fit: contain;
 }
 </style>
@@ -123,7 +137,7 @@ html, body {
 
         <button id="btnFullscreen">⛶</button>
 
-        <!-- 🔥 DATE + LOGOS RESTORED -->
+        <!-- DATE + LOGOS -->
         <div id="dateTimePanel">
 
             <img src="{{ asset('storage/logoDTI.png') }}"
@@ -131,8 +145,10 @@ html, body {
                  alt="Left Logo">
 
             <div class="text-center">
+
                 <div id="txtClock"></div>
                 <div id="txtDate"></div>
+
             </div>
 
             <img src="{{ asset('storage/bagongpilipinas2.png') }}"
@@ -145,6 +161,7 @@ html, body {
 
     <!-- COUNTERS -->
     <div id="countersPanel">
+
         <h1 id="txtTopNowServing">NOW SERVING</h1>
 
         @foreach($selectedCounters as $i)
@@ -153,6 +170,7 @@ html, body {
             <span id="txtServingNumber{{ $i }}" class="counterNumber">C000</span>
         </div>
         @endforeach
+
     </div>
 
 </div>
