@@ -55,6 +55,7 @@ class AdminController extends Controller
             'counter_id' => $request->role === 'counter'
                                 ? $request->counter_id
                                 : null,
+            'is_online'  => false,
         ]);
 
         return back()->with('success', 'User created successfully.');
@@ -72,9 +73,10 @@ class AdminController extends Controller
 
         foreach ($counters as $counterId) {
 
+            // Get the latest SERVING ticket for this counter
             $ticket = Queue::where('counter_id', $counterId)
                 ->where('status', 'serving')
-                ->latest('updated_at')
+                ->orderByDesc('updated_at')
                 ->first();
 
             $data[$counterId] = [
@@ -89,20 +91,19 @@ class AdminController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | 🔥 COUNTER ONLINE / OFFLINE STATUS (RESTORED FEATURE)
+    | 🔥 COUNTER ONLINE / OFFLINE STATUS (RESTORED)
     |--------------------------------------------------------------------------
     */
     public function getCounterStatus()
     {
         $counters = User::where('role', 'counter')->get();
-
         $data = [];
 
         foreach ($counters as $counter) {
-            $counterId = $counter->counter_id;
 
-            if ($counterId) {
-                $data[$counterId] = [
+            if ($counter->counter_id) {
+
+                $data[$counter->counter_id] = [
                     'user'   => $counter->full_name,
                     'status' => $counter->is_online ? 'online' : 'offline'
                 ];
