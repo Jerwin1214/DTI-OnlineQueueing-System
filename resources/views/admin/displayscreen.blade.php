@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Display Screen - Smart TV')
+@section('title', 'Display Screen - Google')
 
 @php
     $hideSidebar = true;
@@ -9,40 +9,38 @@
 @endphp
 
 @section('content')
-
 <style>
 html, body {
     margin: 0;
     padding: 0;
-    height: 100vh;
-    width: 100vw;
+    height: 100%;
+    width: 100%;
     overflow: hidden;
-    background: #0f172a;
-    font-family: Arial, Helvetica, sans-serif;
+    background-color: #1f2937;
 }
 
 #displayScreenContainer {
     display: flex;
     height: 100%;
     width: 100%;
-    gap: 15px;
-    padding: 15px;
+    gap: 1rem;
+    padding: 0.5rem;
     box-sizing: border-box;
 }
 
-/* LEFT PANEL (VIDEO + CLOCK) */
 #videoPanel {
     flex: 3;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 1rem;
+    position: relative;
 }
 
 #videoPlayer {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 15px;
+    border-radius: 0.5rem;
 }
 
 #dateTimePanel {
@@ -50,95 +48,126 @@ html, body {
     justify-content: space-between;
     align-items: center;
     background: white;
-    color: #1e3a8a;
-    padding: 20px;
-    border-radius: 15px;
+    color: #1e40af;
+    padding: 1rem;
+    border-radius: 0.75rem;
 }
 
+/* 🔥 BIG CLOCK STYLE */
 #txtClock {
-    font-size: 60px;
-    font-weight: 900;
+    font-size: 4rem;
+    font-weight: 800;
+    line-height: 1.1;
 }
 
+/* 🔥 BIG DATE STYLE */
 #txtDate {
-    font-size: 30px;
+    font-size: 2rem;
+    margin-top: 5px;
     font-weight: 600;
 }
 
-.logo-img {
-    height: 100px;
-}
-
-/* RIGHT PANEL (COUNTERS) */
 #countersPanel {
-    flex: 1.5;
+    flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: 25px;
+    align-items: flex-end;
+    gap: 1rem;
 }
 
 #txtTopNowServing {
-    font-size: 50px;
+    font-size: 2.5rem;
     color: white;
-    font-weight: 900;
-    text-align: center;
+    font-weight: bold;
+    text-align: right;
 }
 
 .counterBox {
-    background: #1e40af;
-    padding: 25px;
-    border-radius: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: #1e3a8a;
+    padding: 1rem 2rem;
+    border-radius: 0.75rem;
+    width: 100%;
 }
 
 .counterLabel {
     color: white;
-    font-size: 32px;
-    font-weight: bold;
+    font-size: 1.5rem;
 }
 
 .counterNumber {
     color: #facc15;
-    font-size: 55px;
-    font-weight: 900;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+#btnFullscreen {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    font-size: 2rem;
+    color: white;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+/* 🔥 LOGO SIZE */
+.logo-img {
+    height: 90px;
+    object-fit: contain;
 }
 </style>
 
 <div id="displayScreenContainer">
 
-    <!-- LEFT SIDE -->
+    <!-- VIDEO PANEL -->
     <div id="videoPanel">
 
-        <video id="videoPlayer" autoplay loop muted playsinline>
+        <video id="videoPlayer"
+               autoplay
+               loop
+               muted
+               playsinline>
+
             <source src="{{ asset('storage/VIDEOFORQUEUING.mp4') }}" type="video/mp4">
         </video>
 
+        <button id="btnFullscreen">⛶</button>
+
+        <!-- DATE + LOGOS -->
         <div id="dateTimePanel">
 
-            <img src="{{ asset('storage/logoDTI.png') }}" class="logo-img">
+            <img src="{{ asset('storage/logoDTI.png') }}"
+                 class="logo-img"
+                 alt="Left Logo">
 
-            <div style="text-align:center;">
+            <div class="text-center">
+
                 <div id="txtClock"></div>
                 <div id="txtDate"></div>
+
             </div>
 
-            <img src="{{ asset('storage/bagongpilipinas2.png') }}" class="logo-img">
+            <img src="{{ asset('storage/bagongpilipinas2.png') }}"
+                 class="logo-img"
+                 alt="Right Logo">
 
         </div>
+
     </div>
 
-    <!-- RIGHT SIDE -->
+    <!-- COUNTERS -->
     <div id="countersPanel">
 
-        <div id="txtTopNowServing">NOW SERVING</div>
+        <h1 id="txtTopNowServing">NOW SERVING</h1>
 
         @foreach($selectedCounters as $i)
         <div class="counterBox">
-            <div class="counterLabel">Counter {{ $i }}</div>
-            <div id="txtServingNumber{{ $i }}" class="counterNumber">C000</div>
+            <span class="counterLabel">Counter {{ $i }}:</span>
+            <span id="txtServingNumber{{ $i }}" class="counterNumber">C000</span>
         </div>
         @endforeach
 
@@ -157,76 +186,82 @@ html, body {
 
 let previousTickets = {};
 
-// 🔥 CLOCK FUNCTION
+// CLOCK
 function updateClock() {
     const now = new Date();
+    const hours = now.getHours() % 12 || 12;
+    const minutes = now.getMinutes().toString().padStart(2,'0');
+    const seconds = now.getSeconds().toString().padStart(2,'0');
+    const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
 
-    const options = {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    };
+    document.getElementById('txtClock').innerText =
+        `${hours}:${minutes}:${seconds} ${ampm}`;
 
-    const time = now.toLocaleTimeString('en-US');
-    const date = now.toLocaleDateString('en-US', options);
-
-    document.getElementById('txtClock').innerText = time;
-    document.getElementById('txtDate').innerText = date;
+    document.getElementById('txtDate').innerText =
+        now.toDateString();
 }
 
 setInterval(updateClock, 1000);
 updateClock();
 
 
-// 🔥 PLAY SOUND
+// FULLSCREEN
+document.getElementById('btnFullscreen')
+.addEventListener('click', () => {
+
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+    } else {
+        document.exitFullscreen();
+    }
+});
+
+
+// SOUND
 function playSound() {
     const sound = document.getElementById('nextSound');
     sound.currentTime = 0;
-    sound.play().catch(()=>{});
+    sound.play().catch(() => {});
 }
 
 
-// 🔥 FETCH COUNTERS
+// FETCH COUNTERS WITH SOUND
 function fetchCounters() {
 
-    fetch("{{ route('admin.getCounters') }}", { cache: "no-store" })
-    .then(response => response.json())
-    .then(data => {
+    fetch("{{ route('admin.getCounters') }}")
+        .then(res => res.json())
+        .then(data => {
 
-        @foreach($selectedCounters as $i)
+            @foreach($selectedCounters as $i)
 
-        const counterId = {{ $i }};
-        const element = document.getElementById('txtServingNumber{{ $i }}');
+            const counterId = {{ $i }};
+            const el = document.getElementById('txtServingNumber{{ $i }}');
 
-        if (!element) return;
+            if (!el) return;
 
-        let newTicket = "C000";
+            let newTicket = 'C000';
 
-        if (data[counterId] && data[counterId].ticket) {
-            newTicket = data[counterId].ticket;
-        }
-
-        if (previousTickets[counterId] !== newTicket) {
-
-            if (previousTickets[counterId] !== undefined) {
-                playSound();
+            if (data[counterId] && data[counterId].ticket) {
+                newTicket = data[counterId].ticket;
             }
 
-            previousTickets[counterId] = newTicket;
-        }
+            if (previousTickets[counterId] !== newTicket) {
 
-        element.innerText = newTicket;
+                if (previousTickets[counterId] !== undefined) {
+                    playSound();
+                }
 
-        @endforeach
+                previousTickets[counterId] = newTicket;
+            }
 
-    })
-    .catch(error => {
-        console.log("Fetch error:", error);
-    });
+            el.innerText = newTicket;
+
+            @endforeach
+
+        })
+        .catch(err => console.log("Display fetch error:", err));
 }
 
-// 🔥 AUTO REFRESH EVERY 2 SECONDS
 setInterval(fetchCounters, 2000);
 fetchCounters();
 
