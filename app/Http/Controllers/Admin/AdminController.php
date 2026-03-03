@@ -62,7 +62,7 @@ class AdminController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | 🔥 DISPLAY SCREEN API (FIXED)
+    | 🔥 DISPLAY SCREEN - CURRENT SERVING TICKETS
     |--------------------------------------------------------------------------
     */
     public function getCounters()
@@ -72,10 +72,9 @@ class AdminController extends Controller
 
         foreach ($counters as $counterId) {
 
-            // Get CURRENT SERVING ticket for this counter
             $ticket = Queue::where('counter_id', $counterId)
                 ->where('status', 'serving')
-                ->orderByDesc('updated_at')
+                ->latest('updated_at')
                 ->first();
 
             $data[$counterId] = [
@@ -83,6 +82,31 @@ class AdminController extends Controller
                     ? 'C' . str_pad($ticket->ticket_number, 3, '0', STR_PAD_LEFT)
                     : null
             ];
+        }
+
+        return response()->json($data);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | 🔥 COUNTER ONLINE / OFFLINE STATUS (RESTORED FEATURE)
+    |--------------------------------------------------------------------------
+    */
+    public function getCounterStatus()
+    {
+        $counters = User::where('role', 'counter')->get();
+
+        $data = [];
+
+        foreach ($counters as $counter) {
+            $counterId = $counter->counter_id;
+
+            if ($counterId) {
+                $data[$counterId] = [
+                    'user'   => $counter->full_name,
+                    'status' => $counter->is_online ? 'online' : 'offline'
+                ];
+            }
         }
 
         return response()->json($data);
