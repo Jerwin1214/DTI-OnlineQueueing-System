@@ -10,47 +10,45 @@ use App\Http\Controllers\Counter\CounterController;
 
 /*
 |--------------------------------------------------------------------------
-| WEB ROUTES
+| ROOT
 |--------------------------------------------------------------------------
 */
-
-// ====================
-// Redirect root to login
-// ====================
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
-
-// ====================
-// LOGIN ROUTES
-// ====================
+/*
+|--------------------------------------------------------------------------
+| LOGIN
+|--------------------------------------------------------------------------
+*/
 Route::get('/login', [LoginController::class, 'showLoginForm'])
     ->name('login');
 
 Route::post('/login', [LoginController::class, 'login'])
     ->name('login.submit');
 
-
-// =======================================================
-// ADMIN ROUTES (ADMIN ONLY)
-// =======================================================
+/*
+|--------------------------------------------------------------------------
+| ADMIN ROUTES
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
 
+        // Dashboard
         Route::get('/dashboard', [AdminController::class, 'index'])
             ->name('dashboard');
 
+        // Display Screen
         Route::get('/display-screen', [AdminController::class, 'displayScreen'])
             ->name('displayScreen');
 
+        // 🔥 API FOR DISPLAY SCREEN (IMPORTANT)
         Route::get('/get-counters', [AdminController::class, 'getCounters'])
             ->name('getCounters');
-
-        Route::get('/get-counter-status', [AdminController::class, 'getCounterStatus'])
-            ->name('getCounterStatus');
 
         // User Management
         Route::get('/users', [AdminController::class, 'users'])->name('users');
@@ -78,10 +76,11 @@ Route::middleware(['auth', 'role:admin'])
             ->name('logout');
     });
 
-
-// =======================================================
-// COUNTER ROUTES (COUNTER ONLY)
-// =======================================================
+/*
+|--------------------------------------------------------------------------
+| COUNTER ROUTES
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'role:counter'])
     ->prefix('counter')
     ->name('counter.')
@@ -90,15 +89,19 @@ Route::middleware(['auth', 'role:counter'])
         Route::get('/dashboard', [CounterController::class, 'index'])
             ->name('dashboard');
 
+        // NEXT TICKET
         Route::post('/tickets/serve', [CounterController::class, 'serveNextTicket'])
             ->name('serveTicket');
 
+        // COMPLETE TICKET
         Route::post('/tickets/complete', [CounterController::class, 'completeCurrentTicket'])
             ->name('completeTicket');
 
+        // STATUS FOR DASHBOARD
         Route::get('/status', [CounterController::class, 'getStatus'])
             ->name('status');
 
+        // Logout
         Route::post('/logout', [CounterController::class, 'logout'])
             ->name('logout');
     });
