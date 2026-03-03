@@ -22,7 +22,6 @@ class CounterController extends Controller
             abort(403, 'No counter assigned.');
         }
 
-        // Mark counter user as online
         DB::table('users')
             ->where('id', $user->id)
             ->update([
@@ -39,7 +38,7 @@ class CounterController extends Controller
 
     /**
      * =========================
-     * SERVE NEXT TICKET (FIXED)
+     * SERVE NEXT TICKET
      * =========================
      */
     public function serveNextTicket()
@@ -52,7 +51,6 @@ class CounterController extends Controller
             ], 400);
         }
 
-        // Prevent double serving
         $currentServing = DB::table('queues')
             ->where('counter_id', $counterId)
             ->where('status', 'serving')
@@ -61,11 +59,10 @@ class CounterController extends Controller
         if ($currentServing) {
             return response()->json([
                 'message' => 'Already serving a ticket.',
-                'ticket'  => $currentServing->ticket_number
+                'ticket'  => $this->formatTicket($currentServing->ticket_number)
             ], 400);
         }
 
-        // Get oldest waiting ticket assigned to this counter
         $nextTicket = DB::table('queues')
             ->where('counter_id', $counterId)
             ->where('status', 'waiting')
@@ -78,7 +75,6 @@ class CounterController extends Controller
             ], 400);
         }
 
-        // Update to serving
         DB::table('queues')
             ->where('id', $nextTicket->id)
             ->update([
@@ -88,7 +84,7 @@ class CounterController extends Controller
 
         return response()->json([
             'message' => 'Serving ticket',
-            'ticket'  => $nextTicket->ticket_number
+            'ticket'  => $this->formatTicket($nextTicket->ticket_number)
         ]);
     }
 
@@ -127,41 +123,55 @@ class CounterController extends Controller
 
         return response()->json([
             'message' => 'Ticket completed',
-            'ticket'  => $currentTicket->ticket_number
+            'ticket'  => $this->formatTicket($currentTicket->ticket_number)
         ]);
     }
 
     /**
      * =========================
-     * LIVE STATUS (FIXED)
+     * LIVE STATUS (NOW FORMATTED)
      * =========================
      */
- public function getStatus()
-{
-    $counterId = Auth::user()->counter_id;
+    public function getStatus()
+    {
+        $counterId = Auth::user()->counter_id;
 
-    // Tickets assigned to this counter
-    $serving = DB::table('queues')
-        ->where('counter_id', $counterId)
-        ->where('status', 'serving')
-        ->value('ticket_number');
+        $servingRaw = DB::table('queues')
+            ->where('counter_id', $counterId)
+            ->where('status', 'serving')
+            ->value('ticket_number');
 
-    $waiting = DB::table('queues')
-        ->where('counter_id', $counterId)
-        ->where('status', 'waiting')
-        ->count();
+        $serving = $servingRaw
+            ? $this->formatTicket($servingRaw)
+            : null;
 
-    $done = DB::table('queues')
-        ->where('counter_id', $counterId)
-        ->where('status', 'done')
-        ->count();
+        $waiting = DB::table('queues')
+            ->where('counter_id', $counterId)
+            ->where('status', 'waiting')
+            ->count();
 
-    return response()->json([
-        'serving' => $serving,
-        'waiting' => $waiting,
-        'last_done' => $done
-    ]);
-}
+        $done = DB::table('queues')
+            ->where('counter_id', $counterId)
+            ->where('status', 'done')
+            ->count();
+
+        return response()->json([
+            'serving'   => $serving,   // 🔥 NOW C000 FORMAT
+            'waiting'   => $waiting,
+            'last_done' => $done
+        ]);
+    }
+
+    /**
+     * =========================
+     * FORMAT TO C000
+     * =========================
+     */
+    private function formatTicket($number)
+    {
+        return 'C' . str_pad($number, 3, '0', STR_PAD_LEFT);
+    }
+
     /**
      * =========================
      * LOGOUT
