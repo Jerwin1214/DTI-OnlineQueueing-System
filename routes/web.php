@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 
-// Controllers
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\TicketController;
@@ -38,58 +37,31 @@ Route::middleware(['auth', 'role:admin'])
     ->name('admin.')
     ->group(function () {
 
-        /*
-        |-----------------------
-        | Dashboard
-        |-----------------------
-        */
+        // Dashboard
         Route::get('/dashboard', [AdminController::class, 'index'])
             ->name('dashboard');
 
-        /*
-        |-----------------------
-        | Display Screen
-        |-----------------------
-        */
+        // Display Screen Page
         Route::get('/display-screen', [AdminController::class, 'displayScreen'])
             ->name('displayScreen');
 
-        // 🔥 DISPLAY SCREEN API (Serving Tickets)
+        // 🔥 DISPLAY SCREEN API (CURRENT SERVING)
         Route::get('/get-counters', [AdminController::class, 'getCounters'])
             ->name('getCounters');
 
-        // 🔥 ONLINE / OFFLINE STATUS API (RESTORED FEATURE)
+        // 🔥 COUNTER ONLINE/OFFLINE STATUS
         Route::get('/get-counter-status', [AdminController::class, 'getCounterStatus'])
             ->name('getCounterStatus');
 
-        /*
-        |-----------------------
-        | User Management
-        |-----------------------
-        */
-        Route::get('/users', [AdminController::class, 'users'])
-            ->name('users');
+        // User Management
+        Route::get('/users', [AdminController::class, 'users'])->name('users');
+        Route::get('/create-user', [AdminController::class, 'createUserForm'])->name('createUserForm');
+        Route::post('/create-user', [AdminController::class, 'storeUser'])->name('storeUser');
+        Route::get('/edit-user/{id}', [AdminController::class, 'editUser'])->name('editUser');
+        Route::put('/update-user/{id}', [AdminController::class, 'updateUser'])->name('updateUser');
+        Route::delete('/delete-user/{id}', [AdminController::class, 'deleteUser'])->name('deleteUser');
 
-        Route::get('/create-user', [AdminController::class, 'createUserForm'])
-            ->name('createUserForm');
-
-        Route::post('/create-user', [AdminController::class, 'storeUser'])
-            ->name('storeUser');
-
-        Route::get('/edit-user/{id}', [AdminController::class, 'editUser'])
-            ->name('editUser');
-
-        Route::put('/update-user/{id}', [AdminController::class, 'updateUser'])
-            ->name('updateUser');
-
-        Route::delete('/delete-user/{id}', [AdminController::class, 'deleteUser'])
-            ->name('deleteUser');
-
-        /*
-        |-----------------------
-        | Ticket Management
-        |-----------------------
-        */
+        // Ticket Management
         Route::get('/ticket-management', [TicketController::class, 'index'])
             ->name('ticket.management');
 
@@ -102,11 +74,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::delete('/tickets/clear', [TicketController::class, 'clear'])
             ->name('ticket.clear');
 
-        /*
-        |-----------------------
-        | Logout
-        |-----------------------
-        */
+        // Logout
         Route::post('/logout', [AdminController::class, 'logout'])
             ->name('logout');
     });
@@ -132,7 +100,7 @@ Route::middleware(['auth', 'role:counter'])
         Route::post('/tickets/complete', [CounterController::class, 'completeCurrentTicket'])
             ->name('completeTicket');
 
-        // COUNTER DASHBOARD STATUS
+        // LIVE STATUS (FOR COUNTER DASHBOARD)
         Route::get('/status', [CounterController::class, 'getStatus'])
             ->name('status');
 
