@@ -53,7 +53,9 @@ class AdminController extends Controller
             'password'   => Hash::make($request->password),
             'full_name'  => $request->full_name,
             'role'       => $request->role,
-            'counter_id' => $request->role === 'counter' ? $request->counter_id : null,
+            'counter_id' => $request->role === 'counter'
+                                ? $request->counter_id
+                                : null,
             'is_online'  => false,
         ]);
 
@@ -74,7 +76,7 @@ class AdminController extends Controller
 
             $ticket = Queue::where('counter_id', $counterId)
                 ->where('status', 'serving')
-                ->orderByDesc('updated_at')
+                ->latest('updated_at')
                 ->first();
 
             $data[$counterId] = [
