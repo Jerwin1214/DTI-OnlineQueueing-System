@@ -38,27 +38,58 @@ Route::middleware(['auth', 'role:admin'])
     ->name('admin.')
     ->group(function () {
 
-        // Dashboard
+        /*
+        |-----------------------
+        | Dashboard
+        |-----------------------
+        */
         Route::get('/dashboard', [AdminController::class, 'index'])
             ->name('dashboard');
 
-        // Display Screen
+        /*
+        |-----------------------
+        | Display Screen
+        |-----------------------
+        */
         Route::get('/display-screen', [AdminController::class, 'displayScreen'])
             ->name('displayScreen');
 
-        // 🔥 API FOR DISPLAY SCREEN (IMPORTANT)
+        // 🔥 DISPLAY SCREEN API (Serving Tickets)
         Route::get('/get-counters', [AdminController::class, 'getCounters'])
             ->name('getCounters');
 
-        // User Management
-        Route::get('/users', [AdminController::class, 'users'])->name('users');
-        Route::get('/create-user', [AdminController::class, 'createUserForm'])->name('createUserForm');
-        Route::post('/create-user', [AdminController::class, 'storeUser'])->name('storeUser');
-        Route::get('/edit-user/{id}', [AdminController::class, 'editUser'])->name('editUser');
-        Route::put('/update-user/{id}', [AdminController::class, 'updateUser'])->name('updateUser');
-        Route::delete('/delete-user/{id}', [AdminController::class, 'deleteUser'])->name('deleteUser');
+        // 🔥 ONLINE / OFFLINE STATUS API (RESTORED FEATURE)
+        Route::get('/get-counter-status', [AdminController::class, 'getCounterStatus'])
+            ->name('getCounterStatus');
 
-        // Ticket Management
+        /*
+        |-----------------------
+        | User Management
+        |-----------------------
+        */
+        Route::get('/users', [AdminController::class, 'users'])
+            ->name('users');
+
+        Route::get('/create-user', [AdminController::class, 'createUserForm'])
+            ->name('createUserForm');
+
+        Route::post('/create-user', [AdminController::class, 'storeUser'])
+            ->name('storeUser');
+
+        Route::get('/edit-user/{id}', [AdminController::class, 'editUser'])
+            ->name('editUser');
+
+        Route::put('/update-user/{id}', [AdminController::class, 'updateUser'])
+            ->name('updateUser');
+
+        Route::delete('/delete-user/{id}', [AdminController::class, 'deleteUser'])
+            ->name('deleteUser');
+
+        /*
+        |-----------------------
+        | Ticket Management
+        |-----------------------
+        */
         Route::get('/ticket-management', [TicketController::class, 'index'])
             ->name('ticket.management');
 
@@ -71,7 +102,11 @@ Route::middleware(['auth', 'role:admin'])
         Route::delete('/tickets/clear', [TicketController::class, 'clear'])
             ->name('ticket.clear');
 
-        // Logout
+        /*
+        |-----------------------
+        | Logout
+        |-----------------------
+        */
         Route::post('/logout', [AdminController::class, 'logout'])
             ->name('logout');
     });
@@ -97,7 +132,7 @@ Route::middleware(['auth', 'role:counter'])
         Route::post('/tickets/complete', [CounterController::class, 'completeCurrentTicket'])
             ->name('completeTicket');
 
-        // STATUS FOR DASHBOARD
+        // COUNTER DASHBOARD STATUS
         Route::get('/status', [CounterController::class, 'getStatus'])
             ->name('status');
 
