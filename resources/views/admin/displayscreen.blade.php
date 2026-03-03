@@ -147,8 +147,6 @@ html, body {
 @section('scripts')
 <script>
 
-let previousTickets = {};
-
 // CLOCK
 function updateClock() {
     const now = new Date();
@@ -180,15 +178,7 @@ document.getElementById('btnFullscreen')
 });
 
 
-// PLAY SOUND
-function playSound() {
-    const sound = document.getElementById('nextSound');
-    sound.currentTime = 0;
-    sound.play().catch(() => {});
-}
-
-
-// FETCH COUNTERS WITH SOUND DETECTION
+// FETCH COUNTERS (FIXED VERSION)
 function fetchCounters() {
 
     fetch("{{ route('admin.getCounters') }}")
@@ -197,29 +187,19 @@ function fetchCounters() {
 
             @foreach($selectedCounters as $i)
 
-            const counterId = {{ $i }};
-            const el = document.getElementById('txtServingNumber{{ $i }}');
+            const el{{ $i }} =
+                document.getElementById('txtServingNumber{{ $i }}');
 
-            if (!el) return;
+            if (el{{ $i }}) {
 
-            let newTicket = 'C000';
-
-            if (data[counterId] && data[counterId].ticket) {
-                newTicket = data[counterId].ticket;
-            }
-
-            // 🔥 Play sound only if ticket changed
-            if (previousTickets[counterId] !== newTicket) {
-
-                // Don't play on first load
-                if (previousTickets[counterId] !== undefined) {
-                    playSound();
+                if (data[{{ $i }}] && data[{{ $i }}].ticket) {
+                    el{{ $i }}.innerText =
+                        data[{{ $i }}].ticket;
+                } else {
+                    el{{ $i }}.innerText = 'C000';
                 }
 
-                previousTickets[counterId] = newTicket;
             }
-
-            el.innerText = newTicket;
 
             @endforeach
 
