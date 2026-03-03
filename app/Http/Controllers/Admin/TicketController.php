@@ -15,8 +15,9 @@ class TicketController extends Controller
      */
     public function index()
     {
+        // 🔥 FIX: Always sort by ID (real queue order)
         $tickets = DB::table('queues')
-            ->orderBy('ticket_number', 'asc')
+            ->orderBy('id', 'asc')
             ->get();
 
         return view('admin.ticket-management', compact('tickets'));
@@ -24,7 +25,7 @@ class TicketController extends Controller
 
     /**
      * ====================
-     * Add Tickets (FIXED)
+     * Add Tickets
      * ====================
      */
     public function add(Request $request)
@@ -38,25 +39,19 @@ class TicketController extends Controller
 
         try {
 
-            // Get last ticket number
+            // Get last ticket number safely
             $lastNumber = DB::table('queues')->max('ticket_number') ?? 0;
 
-            // Get selected counters safely
             $counters = $request->has('counters') ? $request->counters : [];
 
             for ($i = 1; $i <= $request->ticket_count; $i++) {
 
                 $lastNumber++;
 
-                // If counters are selected → distribute
-                if (is_array($counters) && count($counters) > 0) {
-
+                if (!empty($counters)) {
                     $counterIndex = ($i - 1) % count($counters);
                     $assignedCounter = (int) $counters[$counterIndex];
-
                 } else {
-
-                    // No counter selected → keep NULL
                     $assignedCounter = null;
                 }
 
