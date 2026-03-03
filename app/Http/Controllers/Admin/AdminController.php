@@ -40,11 +40,11 @@ class AdminController extends Controller
     public function storeUser(Request $request)
     {
         $request->validate([
-            'user_id'   => 'required|unique:users,user_id',
-            'password'  => 'required|confirmed|min:8',
-            'full_name' => 'required|string|max:255',
-            'role'      => 'required|in:admin,counter',
-            'counter_id'=> 'nullable|integer',
+            'user_id'    => 'required|unique:users,user_id',
+            'password'   => 'required|confirmed|min:8',
+            'full_name'  => 'required|string|max:255',
+            'role'       => 'required|in:admin,counter',
+            'counter_id' => 'nullable|integer',
         ]);
 
         User::create([
@@ -62,7 +62,7 @@ class AdminController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | 🔥 DISPLAY SCREEN API (THIS FIXES YOUR PROBLEM)
+    | 🔥 DISPLAY SCREEN API (FIXED)
     |--------------------------------------------------------------------------
     */
     public function getCounters()
@@ -72,10 +72,10 @@ class AdminController extends Controller
 
         foreach ($counters as $counterId) {
 
-            // Get CURRENT SERVING ticket
+            // Get CURRENT SERVING ticket for this counter
             $ticket = Queue::where('counter_id', $counterId)
                 ->where('status', 'serving')
-                ->latest('updated_at')
+                ->orderByDesc('updated_at')
                 ->first();
 
             $data[$counterId] = [
