@@ -28,7 +28,7 @@ class AdminController extends Controller
     */
     public function users()
     {
-        $users = User::orderBy('id', 'asc')->get(); // fixed ordering
+        $users = User::orderBy('id', 'asc')->get();
         return view('admin.users', compact('users'));
     }
 
@@ -58,7 +58,68 @@ class AdminController extends Controller
             'is_online'  => false,
         ]);
 
-        return back()->with('success', 'User created successfully.');
+        return redirect()->route('admin.users')
+            ->with('success', 'User created successfully.');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | EDIT USER
+    |--------------------------------------------------------------------------
+    */
+    public function editUser($id)
+    {
+        $user = User::findOrFail($id);
+
+        return view('admin.edit-user', compact('user'));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE USER
+    |--------------------------------------------------------------------------
+    */
+    public function updateUser(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'user_id'    => 'required|unique:users,user_id,' . $user->id,
+            'password'   => 'nullable|confirmed|min:8',
+            'full_name'  => 'required|string|max:255',
+            'role'       => 'required|in:admin,counter',
+            'counter_id' => 'nullable|integer',
+        ]);
+
+        $user->user_id = $request->user_id;
+        $user->full_name = $request->full_name;
+        $user->role = $request->role;
+
+        $user->counter_id = $request->role === 'counter'
+                                ? $request->counter_id
+                                : null;
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+
+        $user->save();
+
+        return redirect()->route('admin.users')
+            ->with('success', 'User updated successfully.');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE USER
+    |--------------------------------------------------------------------------
+    */
+    public function deleteUser($id)
+    {
+        User::findOrFail($id)->delete();
+
+        return redirect()->route('admin.users')
+            ->with('success', 'User deleted successfully.');
     }
 
     /*
@@ -73,10 +134,9 @@ class AdminController extends Controller
 
         foreach ($counters as $counterId) {
 
-            // get latest serving ticket properly ordered
             $ticket = Queue::where('counter_id', $counterId)
                 ->where('status', 'serving')
-                ->orderBy('id', 'desc')   // FIXED (stable)
+                ->orderBy('id', 'desc')
                 ->first();
 
             $data[$counterId] = [
@@ -135,7 +195,6 @@ class AdminController extends Controller
     */
     public function ticketManagement()
     {
-        // 🔥 FIXED ORDERING (REAL QUEUE ORDER)
         $tickets = Queue::orderBy('id', 'asc')->get();
 
         return view('admin.ticket-management', compact('tickets'));
