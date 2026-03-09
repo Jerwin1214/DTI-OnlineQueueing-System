@@ -183,7 +183,14 @@ class AdminController extends Controller
     */
     public function displayScreen(Request $request)
     {
-        $selectedCounters = $request->input('counters', [1,2,3,4,5]);
+        // FIX: convert URL string "1,2,3" to array
+        $countersParam = $request->query('counters');
+
+        if ($countersParam) {
+            $selectedCounters = explode(',', $countersParam);
+        } else {
+            $selectedCounters = [1,2,3,4,5];
+        }
 
         return view('admin.displayscreen', compact('selectedCounters'));
     }
