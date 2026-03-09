@@ -181,20 +181,25 @@ class AdminController extends Controller
     | DISPLAY SCREEN VIEW
     |--------------------------------------------------------------------------
     */
-    public function displayScreen(Request $request)
-    {
-        // FIX: convert URL string "1,2,3" to array
-        $countersParam = $request->query('counters');
+   public function displayScreen(Request $request)
+{
+    $countersParam = $request->query('counters');
 
-        if ($countersParam) {
-            $selectedCounters = explode(',', $countersParam);
-        } else {
-            $selectedCounters = [1,2,3,4,5];
-        }
+    if (is_array($countersParam)) {
+        // Already an array from URL like counters[]=1&counters[]=2
+        $selectedCounters = $countersParam;
 
-        return view('admin.displayscreen', compact('selectedCounters'));
+    } elseif (is_string($countersParam)) {
+        // String from URL like counters=1,2
+        $selectedCounters = explode(',', $countersParam);
+
+    } else {
+        // Default if nothing passed
+        $selectedCounters = [1,2,3,4,5];
     }
 
+    return view('admin.displayscreen', compact('selectedCounters'));
+}
     /*
     |--------------------------------------------------------------------------
     | TICKET MANAGEMENT
