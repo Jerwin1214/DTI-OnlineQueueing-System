@@ -3,286 +3,322 @@
 @section('title', 'Display Screen - Google')
 
 @php
-    $hideSidebar = true;
-    $hideTopbar = true;
-    $selectedCounters = request()->query('counters', range(1,5));
+$hideSidebar = true;
+$hideTopbar = true;
+$selectedCounters = request()->query('counters', range(1,5));
+
+if(!is_array($selectedCounters)){
+    $selectedCounters = explode(',', $selectedCounters);
+}
 @endphp
 
 @section('content')
+
 <style>
+
 html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-    background-color: #1f2937;
+    margin:0;
+    padding:0;
+    height:100%;
+    width:100%;
+    overflow:hidden;
+    background-color:#1f2937;
 }
 
-#displayScreenContainer {
-    display: flex;
-    height: 100%;
-    width: 100%;
-    gap: 1rem;
-    padding: 0.5rem;
-    box-sizing: border-box;
+#displayScreenContainer{
+    display:flex;
+    height:100%;
+    width:100%;
+    gap:1rem;
+    padding:0.5rem;
+    box-sizing:border-box;
 }
 
-#videoPanel {
-    flex: 3;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    position: relative;
+#videoPanel{
+    flex:3;
+    display:flex;
+    flex-direction:column;
+    gap:1rem;
+    position:relative;
 }
 
-#videoPlayer {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 0.5rem;
+#videoPlayer{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    border-radius:0.5rem;
 }
 
-#dateTimePanel {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: white;
-    color: #1e40af;
-    padding: 1rem;
-    border-radius: 0.75rem;
+#dateTimePanel{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:white;
+    color:#1e40af;
+    padding:1rem;
+    border-radius:0.75rem;
 }
 
-/* 🔥 BIG CLOCK STYLE */
-#txtClock {
-    font-size: 4rem;
-    font-weight: 800;
-    line-height: 1.1;
+#txtClock{
+    font-size:4rem;
+    font-weight:800;
 }
 
-/* 🔥 BIG DATE STYLE */
-#txtDate {
-    font-size: 2rem;
-    margin-top: 5px;
-    font-weight: 600;
+#txtDate{
+    font-size:2rem;
+    margin-top:5px;
+    font-weight:600;
 }
 
-#countersPanel {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 1rem;
+#countersPanel{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:1rem;
 }
 
-#txtTopNowServing {
-    font-size: 2.5rem;
-    color: white;
-    font-weight: bold;
-    text-align: right;
+#txtTopNowServing{
+    font-size:2.5rem;
+    color:white;
+    font-weight:bold;
 }
 
-.counterBox {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #1e3a8a;
-    padding: 1rem 2rem;
-    border-radius: 0.75rem;
-    width: 100%;
+.counterBox{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#1e3a8a;
+    padding:1rem 2rem;
+    border-radius:0.75rem;
+    width:100%;
 }
 
-.counterLabel {
-    color: white;
-    font-size: 1.5rem;
+.counterLabel{
+    color:white;
+    font-size:1.5rem;
 }
 
-.counterNumber {
-    color: #facc15;
-    font-size: 2rem;
-    font-weight: bold;
+.counterNumber{
+    color:#facc15;
+    font-size:2rem;
+    font-weight:bold;
 }
 
-#btnFullscreen {
-    position: absolute;
-    top: 0.5rem;
-    left: 0.5rem;
-    font-size: 2rem;
-    color: white;
-    background: transparent;
-    border: none;
-    cursor: pointer;
+#btnFullscreen{
+    position:absolute;
+    top:0.5rem;
+    left:0.5rem;
+    font-size:2rem;
+    color:white;
+    background:transparent;
+    border:none;
+    cursor:pointer;
 }
 
-/* 🔥 LOGO SIZE */
-.logo-img {
-    height: 90px;
-    object-fit: contain;
+.logo-img{
+    height:90px;
+    object-fit:contain;
 }
+
 </style>
 
 <div id="displayScreenContainer">
 
-    <!-- VIDEO PANEL -->
-    <div id="videoPanel">
+<div id="videoPanel">
 
-        <video id="videoPlayer"
-               autoplay
-               loop
-               muted
-               playsinline>
+<video id="videoPlayer" autoplay loop muted playsinline>
+<source src="{{ asset('storage/VIDEOFORQUEUING.mp4') }}" type="video/mp4">
+</video>
 
-            <source src="{{ asset('storage/VIDEOFORQUEUING.mp4') }}" type="video/mp4">
-        </video>
+<button id="btnFullscreen">⛶</button>
 
-        <button id="btnFullscreen">⛶</button>
+<div id="dateTimePanel">
 
-        <!-- DATE + LOGOS -->
-        <div id="dateTimePanel">
+<img src="{{ asset('storage/logoDTI.png') }}" class="logo-img">
 
-            <img src="{{ asset('storage/logoDTI.png') }}"
-                 class="logo-img"
-                 alt="Left Logo">
+<div class="text-center">
+<div id="txtClock"></div>
+<div id="txtDate"></div>
+</div>
 
-            <div class="text-center">
+<img src="{{ asset('storage/bagongpilipinas2.png') }}" class="logo-img">
 
-                <div id="txtClock"></div>
-                <div id="txtDate"></div>
+</div>
 
-            </div>
+</div>
 
-            <img src="{{ asset('storage/bagongpilipinas2.png') }}"
-                 class="logo-img"
-                 alt="Right Logo">
+<div id="countersPanel">
 
-        </div>
+<h1 id="txtTopNowServing">NOW SERVING</h1>
 
-    </div>
+@foreach($selectedCounters as $i)
 
-    <!-- COUNTERS -->
-    <div id="countersPanel">
+<div class="counterBox">
 
-        <h1 id="txtTopNowServing">NOW SERVING</h1>
+<span class="counterLabel">Counter {{ $i }}:</span>
 
-        @foreach($selectedCounters as $i)
-        <div class="counterBox">
-            <span class="counterLabel">Counter {{ $i }}:</span>
-            <span id="txtServingNumber{{ $i }}" class="counterNumber">C000</span>
-        </div>
-        @endforeach
+<span id="txtServingNumber{{ $i }}" class="counterNumber">C000</span>
 
-    </div>
+</div>
+
+@endforeach
+
+</div>
 
 </div>
 
 <audio id="nextSound" preload="auto">
-    <source src="{{ asset('storage/doorbell-223669.mp3') }}" type="audio/mpeg">
+<source src="{{ asset('storage/doorbell-223669.mp3') }}" type="audio/mpeg">
 </audio>
 
 @endsection
 
+
 @section('scripts')
-@section('scripts')
+
 <script>
 
+/* -----------------------------------
+COUNTER DATA
+----------------------------------- */
+
+let selectedCounters = @json($selectedCounters);
+
 let previousTickets = {};
-let firstLoad = true; // prevent sound on initial load
+let firstLoad = true;
 
-// 🔥 PRELOAD + UNLOCK AUDIO (important for browsers & Smart TV)
+/* -----------------------------------
+AUDIO SETUP
+----------------------------------- */
+
 const sound = document.getElementById('nextSound');
-sound.load();
 
-// Unlock audio after first interaction (TV remote click, mouse click, etc.)
-document.addEventListener('click', function unlockAudio() {
-    sound.play().then(() => {
+document.addEventListener('click', function unlockAudio(){
+
+    sound.play().then(()=>{
+
         sound.pause();
         sound.currentTime = 0;
+
         document.removeEventListener('click', unlockAudio);
-    }).catch(() => {});
+
+    }).catch(()=>{});
+
 });
 
-// CLOCK
-function updateClock() {
+/* -----------------------------------
+CLOCK
+----------------------------------- */
+
+function updateClock(){
+
     const now = new Date();
-    const hours = now.getHours() % 12 || 12;
+
+    const hours = now.getHours()%12 || 12;
     const minutes = now.getMinutes().toString().padStart(2,'0');
     const seconds = now.getSeconds().toString().padStart(2,'0');
-    const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
+
+    const ampm = now.getHours()>=12 ? 'PM':'AM';
 
     document.getElementById('txtClock').innerText =
         `${hours}:${minutes}:${seconds} ${ampm}`;
 
     document.getElementById('txtDate').innerText =
         now.toDateString();
+
 }
 
-setInterval(updateClock, 1000);
+setInterval(updateClock,1000);
 updateClock();
 
 
-// FULLSCREEN (unchanged)
-document.getElementById('btnFullscreen')
-.addEventListener('click', () => {
+/* -----------------------------------
+FULLSCREEN
+----------------------------------- */
 
-    if (!document.fullscreenElement) {
+document.getElementById('btnFullscreen')
+.addEventListener('click',function(){
+
+    if(!document.fullscreenElement){
+
         document.documentElement.requestFullscreen();
-    } else {
+
+    }else{
+
         document.exitFullscreen();
+
     }
+
 });
 
 
-// 🔥 STRONGER SOUND FUNCTION
-function playSound() {
+/* -----------------------------------
+PLAY SOUND
+----------------------------------- */
+
+function playSound(){
+
     sound.pause();
     sound.currentTime = 0;
-    sound.play().catch(err => {
-        console.log("Sound play blocked:", err);
-    });
+
+    sound.play().catch(()=>{});
+
 }
 
 
-// FETCH COUNTERS WITH FIXED SOUND
-function fetchCounters() {
+/* -----------------------------------
+FETCH COUNTERS
+----------------------------------- */
 
-    fetch("{{ route('admin.getCounters') }}", { cache: "no-store" })
-        .then(res => res.json())
-        .then(data => {
+function fetchCounters(){
 
-            @foreach($selectedCounters as $i)
+fetch("{{ route('admin.getCounters') }}",{cache:"no-store"})
 
-            const counterId = {{ $i }};
-            const el = document.getElementById('txtServingNumber{{ $i }}');
+.then(res=>res.json())
 
-            if (!el) return;
+.then(data=>{
 
-            let newTicket = 'C000';
+selectedCounters.forEach(function(counterId){
 
-            if (data[counterId] && data[counterId].ticket) {
-                newTicket = data[counterId].ticket;
-            }
+let el = document.getElementById('txtServingNumber'+counterId);
 
-            // 🔥 ONLY PLAY SOUND IF VALUE REALLY CHANGED
-            if (previousTickets[counterId] !== undefined &&
-                previousTickets[counterId] !== newTicket &&
-                !firstLoad) {
+if(!el) return;
 
-                playSound();
-            }
+let newTicket = 'C000';
 
-            previousTickets[counterId] = newTicket;
-            el.innerText = newTicket;
+if(data[counterId] && data[counterId].ticket){
 
-            @endforeach
+newTicket = data[counterId].ticket;
 
-            firstLoad = false; // after first fetch
-        })
-        .catch(err => console.log("Display fetch error:", err));
 }
 
-setInterval(fetchCounters, 2000);
+if(previousTickets[counterId] !== undefined
+&& previousTickets[counterId] !== newTicket
+&& !firstLoad){
+
+playSound();
+
+}
+
+previousTickets[counterId] = newTicket;
+
+el.innerText = newTicket;
+
+});
+
+firstLoad = false;
+
+})
+
+.catch(err=>console.log("Display fetch error:",err));
+
+}
+
+setInterval(fetchCounters,2000);
+
 fetchCounters();
 
 </script>
-@endsection
+
 @endsection
