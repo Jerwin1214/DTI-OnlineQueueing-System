@@ -127,7 +127,7 @@ html, body {
 
 <div id="videoPanel">
 
-<video id="videoPlayer" autoplay loop muted playsinline>
+<video id="videoPlayer" autoplay loop unmuted playsinline>
 <source src="{{ asset('storage/VIDEOFORQUEUING.mp4') }}" type="video/mp4">
 </video>
 
