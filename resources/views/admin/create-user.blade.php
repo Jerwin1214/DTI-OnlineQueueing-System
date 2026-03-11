@@ -112,7 +112,7 @@
         </div>
 
         <!-- COUNTER -->
-        <div>
+        <div id="counterField">
             <label for="counter_id" class="block text-white font-semibold mb-1">Assign Counter</label>
             <input type="number"
                 name="counter_id"
@@ -145,6 +145,8 @@
 
 <script>
 
+/* TOGGLE PASSWORD */
+
 function togglePassword(id){
     const field = document.getElementById(id);
     field.type = field.type === 'password' ? 'text' : 'password';
@@ -174,6 +176,31 @@ confirmPassword.addEventListener('keyup', function(){
     }
 
 });
+
+/* AUTO HIDE COUNTER FIELD */
+
+const roleSelect = document.getElementById('role');
+const counterField = document.getElementById('counterField');
+const counterInput = document.getElementById('counter_id');
+
+function toggleCounterField(){
+
+    if(roleSelect.value === "admin"){
+        counterField.style.display = "none";
+        counterInput.value = "";
+    }else if(roleSelect.value === "counter"){
+        counterField.style.display = "block";
+    }else{
+        counterField.style.display = "none";
+    }
+
+}
+
+/* RUN ON PAGE LOAD */
+toggleCounterField();
+
+/* RUN WHEN ROLE CHANGES */
+roleSelect.addEventListener('change', toggleCounterField);
 
 </script>
 
