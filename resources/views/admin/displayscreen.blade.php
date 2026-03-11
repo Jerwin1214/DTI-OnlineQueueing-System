@@ -16,153 +16,187 @@ if(!is_array($selectedCounters)){
 
 <style>
 
-html, body {
-    margin:0;
-    padding:0;
-    height:100%;
-    width:100%;
-    overflow:hidden;
-    background-color:#1f2937;
+html, body{
+margin:0;
+padding:0;
+height:100%;
+width:100%;
+overflow:hidden;
+background:#1f2937;
+font-family:Arial, Helvetica, sans-serif;
 }
+
+/* MAIN SCREEN */
 
 #displayScreenContainer{
-    display:flex;
-    height:100%;
-    width:100%;
-    gap:1rem;
-    padding:0.5rem;
-    box-sizing:border-box;
+display:flex;
+height:100%;
+width:100%;
+gap:1rem;
+padding:0.5rem;
+box-sizing:border-box;
 }
 
+/* VIDEO SIDE */
+
 #videoPanel{
-    flex:3;
-    display:flex;
-    flex-direction:column;
-    gap:1rem;
-    position:relative;
+flex:3;
+position:relative;
+height:100%;
 }
 
 #videoPlayer{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    border-radius:0.5rem;
+width:100%;
+height:100%;
+object-fit:cover;
+border-radius:10px;
 }
 
-#dateTimePanel{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    background:white;
-    color:#1e40af;
-    padding:1rem;
-    border-radius:0.75rem;
-}
-
-#txtClock{
-    font-size:4rem;
-    font-weight:800;
-}
-
-#txtDate{
-    font-size:2rem;
-    margin-top:5px;
-    font-weight:600;
-}
-
-#countersPanel{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    align-items:flex-end;
-    gap:1rem;
-}
-
-#txtTopNowServing{
-    font-size:2.5rem;
-    color:white;
-    font-weight:bold;
-}
-
-.counterBox{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    background:#1e3a8a;
-    padding:1rem 2rem;
-    border-radius:0.75rem;
-    width:100%;
-}
-
-.counterLabel{
-    color:white;
-    font-size:1.5rem;
-}
-
-.counterNumber{
-    color:#facc15;
-    font-size:2rem;
-    font-weight:bold;
-}
+/* FULLSCREEN BUTTON */
 
 #btnFullscreen{
-    position:absolute;
-    top:0.5rem;
-    left:0.5rem;
-    font-size:2rem;
-    color:white;
-    background:transparent;
-    border:none;
-    cursor:pointer;
+position:absolute;
+top:10px;
+left:10px;
+font-size:2rem;
+color:white;
+background:transparent;
+border:none;
+cursor:pointer;
+}
+
+/* RIGHT PANEL */
+
+#countersPanel{
+flex:1;
+display:flex;
+flex-direction:column;
+height:100%;
+gap:1rem;
+}
+
+/* LOGO AREA */
+
+#logoPanel{
+display:flex;
+justify-content:space-between;
+align-items:center;
 }
 
 .logo-img{
-    height:90px;
-    object-fit:contain;
+height:90px;
+object-fit:contain;
+}
+
+/* NOW SERVING TITLE */
+
+#txtTopNowServing{
+font-size:2.5rem;
+color:white;
+font-weight:bold;
+text-align:center;
+}
+
+/* COUNTERS */
+
+#counterList{
+flex:1;
+display:flex;
+flex-direction:column;
+gap:1rem;
+}
+
+.counterBox{
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:#1e3a8a;
+padding:1rem 2rem;
+border-radius:0.75rem;
+}
+
+.counterLabel{
+color:white;
+font-size:1.5rem;
+}
+
+.counterNumber{
+color:#facc15;
+font-size:2rem;
+font-weight:bold;
+}
+
+/* DATE TIME PANEL */
+
+#dateTimePanel{
+background:white;
+border-radius:0.75rem;
+padding:1rem;
+text-align:center;
+margin-top:auto;
+}
+
+#txtClock{
+font-size:3.5rem;
+font-weight:800;
+color:#1e40af;
+}
+
+#txtDate{
+font-size:1.8rem;
+font-weight:600;
+color:#1e40af;
 }
 
 </style>
 
 <div id="displayScreenContainer">
 
+<!-- VIDEO PANEL -->
 <div id="videoPanel">
 
-<video id="videoPlayer" autoplay loop unmuted playsinline>
+<video id="videoPlayer" autoplay loop muted playsinline>
 <source src="{{ asset('storage/VIDEOFORQUEUING.mp4') }}" type="video/mp4">
 </video>
 
 <button id="btnFullscreen">⛶</button>
 
-<div id="dateTimePanel">
-
-<img src="{{ asset('storage/logoDTI.png') }}" class="logo-img">
-
-<div class="text-center">
-<div id="txtClock"></div>
-<div id="txtDate"></div>
 </div>
 
-<img src="{{ asset('storage/bagongpilipinas2.png') }}" class="logo-img">
-
-</div>
-
-</div>
-
+<!-- RIGHT PANEL -->
 <div id="countersPanel">
 
+<!-- LOGOS -->
+<div id="logoPanel">
+<img src="{{ asset('storage/logoDTI.png') }}" class="logo-img">
+<img src="{{ asset('storage/bagongpilipinas2.png') }}" class="logo-img">
+</div>
+
 <h1 id="txtTopNowServing">NOW SERVING</h1>
+
+<div id="counterList">
 
 @foreach($selectedCounters as $i)
 
 <div class="counterBox">
 
-<span class="counterLabel">Counter {{ $i }}:</span>
+<span class="counterLabel">Counter {{ $i }}</span>
 
 <span id="txtServingNumber{{ $i }}" class="counterNumber">C000</span>
 
 </div>
 
 @endforeach
+
+</div>
+
+<!-- CLOCK -->
+<div id="dateTimePanel">
+
+<div id="txtClock"></div>
+<div id="txtDate"></div>
+
+</div>
 
 </div>
 
@@ -179,97 +213,74 @@ html, body {
 
 <script>
 
-/* -----------------------------------
-COUNTER DATA
------------------------------------ */
+/* COUNTER DATA */
 
 let selectedCounters = @json($selectedCounters);
-
 let previousTickets = {};
 let firstLoad = true;
 
-/* -----------------------------------
-AUDIO SETUP
------------------------------------ */
+/* AUDIO SETUP */
 
 const sound = document.getElementById('nextSound');
 
 document.addEventListener('click', function unlockAudio(){
 
-    sound.play().then(()=>{
-
-        sound.pause();
-        sound.currentTime = 0;
-
-        document.removeEventListener('click', unlockAudio);
-
-    }).catch(()=>{});
+sound.play().then(()=>{
+sound.pause();
+sound.currentTime = 0;
+document.removeEventListener('click', unlockAudio);
+}).catch(()=>{});
 
 });
 
-/* -----------------------------------
-CLOCK
------------------------------------ */
+/* CLOCK */
 
 function updateClock(){
 
-    const now = new Date();
+const now = new Date();
 
-    const hours = now.getHours()%12 || 12;
-    const minutes = now.getMinutes().toString().padStart(2,'0');
-    const seconds = now.getSeconds().toString().padStart(2,'0');
+const hours = now.getHours()%12 || 12;
+const minutes = now.getMinutes().toString().padStart(2,'0');
+const seconds = now.getSeconds().toString().padStart(2,'0');
 
-    const ampm = now.getHours()>=12 ? 'PM':'AM';
+const ampm = now.getHours()>=12 ? 'PM':'AM';
 
-    document.getElementById('txtClock').innerText =
-        `${hours}:${minutes}:${seconds} ${ampm}`;
+document.getElementById('txtClock').innerText =
+`${hours}:${minutes}:${seconds} ${ampm}`;
 
-    document.getElementById('txtDate').innerText =
-        now.toDateString();
+document.getElementById('txtDate').innerText =
+now.toDateString();
 
 }
 
 setInterval(updateClock,1000);
 updateClock();
 
-
-/* -----------------------------------
-FULLSCREEN
------------------------------------ */
+/* FULLSCREEN */
 
 document.getElementById('btnFullscreen')
 .addEventListener('click',function(){
 
-    if(!document.fullscreenElement){
-
-        document.documentElement.requestFullscreen();
-
-    }else{
-
-        document.exitFullscreen();
-
-    }
+if(!document.fullscreenElement){
+document.documentElement.requestFullscreen();
+}else{
+document.exitFullscreen();
+}
 
 });
 
-
-/* -----------------------------------
-PLAY SOUND
------------------------------------ */
+/* PLAY SOUND */
 
 function playSound(){
 
-    sound.pause();
-    sound.currentTime = 0;
+sound.pause();
+sound.currentTime = 0;
 
-    sound.play().catch(()=>{});
+sound.play().catch(()=>{});
 
 }
 
-
-/* -----------------------------------
-FETCH COUNTERS
------------------------------------ */
+/* FETCH COUNTERS */
 
 function fetchCounters(){
 
@@ -288,17 +299,13 @@ if(!el) return;
 let newTicket = 'C000';
 
 if(data[counterId] && data[counterId].ticket){
-
 newTicket = data[counterId].ticket;
-
 }
 
 if(previousTickets[counterId] !== undefined
 && previousTickets[counterId] !== newTicket
 && !firstLoad){
-
 playSound();
-
 }
 
 previousTickets[counterId] = newTicket;
@@ -316,7 +323,6 @@ firstLoad = false;
 }
 
 setInterval(fetchCounters,2000);
-
 fetchCounters();
 
 </script>
