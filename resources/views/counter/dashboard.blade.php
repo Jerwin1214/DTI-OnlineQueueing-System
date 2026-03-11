@@ -260,25 +260,7 @@ animation:fadeIn 0.2s ease;
 
 .modal-content h3{
 
-margin-bottom:10px;
-
-}
-
-.modal-content button{
-
-margin-top:15px;
-
-padding:10px 18px;
-
-border:none;
-
-border-radius:10px;
-
-background:#2563eb;
-
-color:white;
-
-cursor:pointer;
+font-size:20px;
 
 }
 
@@ -303,55 +285,36 @@ opacity:1;
 @media (max-width:480px){
 
 body{
-
 padding:10px;
-
 align-items:flex-start;
-
 }
 
 .card{
-
 max-width:100%;
-
 padding:20px;
-
 margin-top:20px;
-
 }
 
 .buttons{
-
 flex-direction:column;
-
 }
 
 .buttons button{
-
 width:100%;
-
 font-size:18px;
-
 padding:16px;
-
 }
 
 .stats{
-
 flex-direction:column;
-
 }
 
 .stat-box{
-
 padding:18px;
-
 }
 
 .stat-box h2{
-
 font-size:28px;
-
 }
 
 }
@@ -413,19 +376,16 @@ Counter {{ $counterId }}
 
 </div>
 
-
+<!-- SUCCESS MODAL -->
 <div class="modal" id="successModal">
 
 <div class="modal-content">
 
 <h3 id="modalMessage">Success</h3>
 
-<button onclick="closeModal()">OK</button>
-
 </div>
 
 </div>
-
 
 <script>
 
@@ -443,13 +403,15 @@ function showModal(message){
 
 document.getElementById('modalMessage').innerText = message;
 
-document.getElementById('successModal').style.display='flex';
+const modal = document.getElementById('successModal');
 
-}
+modal.style.display='flex';
 
-function closeModal(){
+/* AUTO CLOSE AFTER 1.5s */
 
-document.getElementById('successModal').style.display='none';
+setTimeout(()=>{
+modal.style.display='none';
+},1500);
 
 }
 
@@ -505,7 +467,7 @@ const res = await axios.post(DONE_URL);
 
 loadStats();
 
-showModal(res.data.message || "Ticket completed successfully!");
+showModal("Success");
 
 }catch(error){
 
