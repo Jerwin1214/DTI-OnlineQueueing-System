@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
+
     /*
     |--------------------------------------------------------------------------
     | ADMIN DASHBOARD
@@ -37,30 +38,71 @@ class AdminController extends Controller
         return view('admin.create-user');
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | STORE NEW USER WITH STRONG PASSWORD VALIDATION
+    |--------------------------------------------------------------------------
+    */
     public function storeUser(Request $request)
     {
+
         $request->validate([
-            'user_id'    => 'required|unique:users,user_id',
-            'password'   => 'required|confirmed|min:8',
-            'full_name'  => 'required|string|max:255',
-            'role'       => 'required|in:admin,counter',
-            'counter_id' => 'nullable|integer',
+
+            'user_id' => [
+                'required',
+                'string',
+                'max:50',
+                'unique:users,user_id'
+            ],
+
+            'password' => [
+                'required',
+                'confirmed',
+                'min:8',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/'
+            ],
+
+            'full_name' => [
+                'required',
+                'string',
+                'max:255'
+            ],
+
+            'role' => [
+                'required',
+                'in:admin,counter'
+            ],
+
+            'counter_id' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:50'
+            ]
+
+        ],[
+            'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+            'password.min' => 'Password must be at least 8 characters.',
+            'password.confirmed' => 'Password confirmation does not match.',
         ]);
 
+
         User::create([
-            'user_id'    => $request->user_id,
-            'password'   => Hash::make($request->password),
-            'full_name'  => $request->full_name,
-            'role'       => $request->role,
+            'user_id' => $request->user_id,
+            'password' => Hash::make($request->password),
+            'full_name' => $request->full_name,
+            'role' => $request->role,
             'counter_id' => $request->role === 'counter'
-                                ? $request->counter_id
-                                : null,
-            'is_online'  => false,
+                ? $request->counter_id
+                : null,
+            'is_online' => false,
         ]);
+
 
         return redirect()->route('admin.users')
             ->with('success', 'User created successfully.');
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -74,6 +116,7 @@ class AdminController extends Controller
         return view('admin.edit-user', compact('user'));
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | UPDATE USER
@@ -81,23 +124,56 @@ class AdminController extends Controller
     */
     public function updateUser(Request $request, $id)
     {
+
         $user = User::findOrFail($id);
 
         $request->validate([
-            'user_id'    => 'required|unique:users,user_id,' . $user->id,
-            'password'   => 'nullable|confirmed|min:8',
-            'full_name'  => 'required|string|max:255',
-            'role'       => 'required|in:admin,counter',
-            'counter_id' => 'nullable|integer',
+
+            'user_id' => [
+                'required',
+                'string',
+                'max:50',
+                'unique:users,user_id,' . $user->id
+            ],
+
+            'password' => [
+                'nullable',
+                'confirmed',
+                'min:8',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/'
+            ],
+
+            'full_name' => [
+                'required',
+                'string',
+                'max:255'
+            ],
+
+            'role' => [
+                'required',
+                'in:admin,counter'
+            ],
+
+            'counter_id' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:50'
+            ]
+
+        ],[
+            'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+            'password.min' => 'Password must be at least 8 characters.',
         ]);
+
 
         $user->user_id = $request->user_id;
         $user->full_name = $request->full_name;
         $user->role = $request->role;
 
         $user->counter_id = $request->role === 'counter'
-                                ? $request->counter_id
-                                : null;
+            ? $request->counter_id
+            : null;
 
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
@@ -105,9 +181,11 @@ class AdminController extends Controller
 
         $user->save();
 
+
         return redirect()->route('admin.users')
             ->with('success', 'User updated successfully.');
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -122,6 +200,7 @@ class AdminController extends Controller
             ->with('success', 'User deleted successfully.');
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | DISPLAY SCREEN - CURRENT SERVING TICKETS
@@ -129,6 +208,7 @@ class AdminController extends Controller
     */
     public function getCounters()
     {
+
         $counters = [1,2,3,4,5];
         $data = [];
 
@@ -149,6 +229,7 @@ class AdminController extends Controller
         return response()->json($data);
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | COUNTER ONLINE / OFFLINE STATUS
@@ -156,9 +237,10 @@ class AdminController extends Controller
     */
     public function getCounterStatus()
     {
+
         $counters = User::where('role', 'counter')
-                        ->orderBy('counter_id', 'asc')
-                        ->get();
+            ->orderBy('counter_id', 'asc')
+            ->get();
 
         $data = [];
 
@@ -167,7 +249,7 @@ class AdminController extends Controller
             if ($counter->counter_id) {
 
                 $data[$counter->counter_id] = [
-                    'user'   => $counter->full_name,
+                    'user' => $counter->full_name,
                     'status' => $counter->is_online ? 'online' : 'offline'
                 ];
             }
@@ -176,30 +258,34 @@ class AdminController extends Controller
         return response()->json($data);
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | DISPLAY SCREEN VIEW
     |--------------------------------------------------------------------------
     */
-   public function displayScreen(Request $request)
-{
-    $countersParam = $request->query('counters');
+    public function displayScreen(Request $request)
+    {
 
-    if (is_array($countersParam)) {
-        // Already an array from URL like counters[]=1&counters[]=2
-        $selectedCounters = $countersParam;
+        $countersParam = $request->query('counters');
 
-    } elseif (is_string($countersParam)) {
-        // String from URL like counters=1,2
-        $selectedCounters = explode(',', $countersParam);
+        if (is_array($countersParam)) {
 
-    } else {
-        // Default if nothing passed
-        $selectedCounters = [1,2,3,4,5];
+            $selectedCounters = $countersParam;
+
+        } elseif (is_string($countersParam)) {
+
+            $selectedCounters = explode(',', $countersParam);
+
+        } else {
+
+            $selectedCounters = [1,2,3,4,5];
+        }
+
+        return view('admin.displayscreen', compact('selectedCounters'));
     }
 
-    return view('admin.displayscreen', compact('selectedCounters'));
-}
+
     /*
     |--------------------------------------------------------------------------
     | TICKET MANAGEMENT
@@ -212,12 +298,14 @@ class AdminController extends Controller
         return view('admin.ticket-management', compact('tickets'));
     }
 
+
     public function deleteTicket($id)
     {
         Queue::findOrFail($id)->delete();
 
         return back()->with('success', 'Ticket deleted successfully.');
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -231,6 +319,7 @@ class AdminController extends Controller
         return back()->with('success', 'All tickets cleared successfully.');
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | LOGOUT
@@ -238,6 +327,7 @@ class AdminController extends Controller
     */
     public function logout(Request $request)
     {
+
         Auth::logout();
 
         $request->session()->invalidate();
@@ -245,4 +335,5 @@ class AdminController extends Controller
 
         return redirect()->route('login');
     }
+
 }
