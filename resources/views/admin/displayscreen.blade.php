@@ -155,7 +155,7 @@ color:#1e40af;
 <!-- VIDEO PANEL -->
 <div id="videoPanel">
 
-<video id="videoPlayer" autoplay loop unmuted playsinline>
+<video id="videoPlayer" autoplay loop muted playsinline>
 <source src="{{ asset('storage/VIDEOFORQUEUING.mp4') }}" type="video/mp4">
 </video>
 
@@ -296,11 +296,15 @@ let el = document.getElementById('txtServingNumber'+counterId);
 
 if(!el) return;
 
-let newTicket = 'C000';
+/* KEEP LAST TICKET IF SERVER RETURNS NONE */
+
+let newTicket = previousTickets[counterId] || 'C000';
 
 if(data[counterId] && data[counterId].ticket){
 newTicket = data[counterId].ticket;
 }
+
+/* PLAY SOUND ONLY WHEN TICKET CHANGES */
 
 if(previousTickets[counterId] !== undefined
 && previousTickets[counterId] !== newTicket
@@ -308,7 +312,11 @@ if(previousTickets[counterId] !== undefined
 playSound();
 }
 
+/* STORE LAST TICKET */
+
 previousTickets[counterId] = newTicket;
+
+/* UPDATE DISPLAY */
 
 el.innerText = newTicket;
 
